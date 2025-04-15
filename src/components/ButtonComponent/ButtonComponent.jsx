@@ -12,7 +12,6 @@ const ButtonComponent = ({
   return (
     <Button size={size} disabled={disabled} style={{ 
       ...styleButton,
-      height: "48px",
        }} {...rests}>
       <span style={styletextButton}>{textButton}</span>
     </Button>

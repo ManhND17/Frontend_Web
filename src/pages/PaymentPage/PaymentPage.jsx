@@ -3,8 +3,8 @@ import { Form } from "antd";
 import { WrapperInfo, WrapperLeft, WrapperRight } from "./style";
 import ButtonComponent from "../../components/ButtonComponent/ButtonComponent";
 import { useDispatch, useSelector } from "react-redux";
-import { selectedOrder } from "../../redux/slides/orderSlide";
-// import { useNavigate } from "react-router-dom";
+import { removeAllOrderProduct, selectedOrder } from "../../redux/slides/orderSlide";
+import { useNavigate } from "react-router-dom";
 import { useMessage } from "../../components/Message/MessageProvider";
 import ModalComponent from "../../components/ModalComponent/ModalComponent";
 import InputComponent from "../../components/InputComponent/InputComponent";
@@ -44,7 +44,7 @@ const PaymentPage = () => {
   });
 
   const { isLoading = false } = mutationUpdate;
-  // const navigate = useNavigate()
+  const navigate = useNavigate()
   const { success, error } = useMessage();
 
   useEffect(() => {
@@ -126,21 +126,27 @@ const PaymentPage = () => {
           totalPrice: totalMeno,
           user: user?.id,
         },
-        {
-          onSuccess: () => {
-            success("Đặt hàng thành công");
-          },
-        },
-        {
-          onError: () =>{
-            error('Đặt hàng không thành công')
-          }
-        }
       );
     }
   };
 
-  const { isPending: isLoadingPayment } = mutationAddOrder;
+  const { isPending: isLoadingPayment, isError, isSuccess,data} = mutationAddOrder;
+  useEffect(()=>{
+    if(isSuccess&& data.statusText ==="OK"){
+      dispatch(removeAllOrderProduct({listChecked}))
+      success('Đặt hàng thành công')
+      navigate('/orderSuccess',{
+        state:{
+          deliveryMethod,
+          paymentMethod,
+          orders: order?.orderItemSlected,
+          total: totalMeno
+        }
+      })
+    }else if(isError){
+      error('Đặt hàng không thành công')
+    }
+  })
   const handleOk = () => {
     const { name, address, city, phone } = stateUserDetails;
     if (name && address && city && phone) {
@@ -170,7 +176,6 @@ const PaymentPage = () => {
       [e.target.name]: e.target.value,
     });
   };
-  console.log('check',isLoadingPayment)
   return (
     <div style={{ background: "#f5f5ff", width: "100%", height: "100vh" }}>
       <Loading isLoading={isLoadingPayment}>
@@ -258,7 +263,7 @@ const PaymentPage = () => {
                       <input
                         type="radio"
                         name="payment"
-                        value="VnPay"
+                        value="VNPAY"
                         checked={paymentMethod === "VnPay"}
                         onChange={() => {
                           setPaymentMethod("VnPay");

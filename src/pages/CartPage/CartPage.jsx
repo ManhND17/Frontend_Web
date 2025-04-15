@@ -30,7 +30,6 @@ import { updateUser } from "../../redux/slides/UserSlide";
 const CartPage = () => {
   const order = useSelector((state) => state.order);
   const user = useSelector((state) => state.user);
-  console.log('state',order)
   const [form] = Form.useForm();
   const [isOpenModal, setIsModalOpen] = useState(false);
   const [stateUserDetails, setStateUserDetails] = useState({
@@ -129,7 +128,7 @@ const CartPage = () => {
       return 10000;
     }
   }, [priceMemo]);
-  console.log('tt',order)
+
   const handleAddCart = () => {
     if(!order?.orderItemSlected?.length){
       error('Chọn sản phẩm trước khi thanh toán!')
