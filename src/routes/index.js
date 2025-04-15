@@ -9,6 +9,7 @@ import SignUpPage from "../pages/SignUpPage/SignUpPage"
 import AdminPage from "../pages/AdminPage/AdminPage"
 import OrderPageUser from "../pages/OrderPage/OrderPageUser"
 import ProfilePage from "../pages/Profile/ProfilePage"
+import PaymentPage from "../pages/PaymentPage/PaymentPage"
 
 export const routes = [
     {
@@ -69,6 +70,12 @@ export const routes = [
     {
         path: '/profile-user',
         page: ProfilePage,
+        isShowHeader: true,
+        isShowFotter: false
+    },
+    {
+        path: '/payment',
+        page: PaymentPage,
         isShowHeader: true,
         isShowFotter: false
     },

@@ -18,7 +18,7 @@ import {
   removeOrderProduct,
   selectedOrder,
 } from "../../redux/slides/orderSlide";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useMessage } from "../../components/Message/MessageProvider";
 import ModalComponent from "../../components/ModalComponent/ModalComponent";
 import InputComponent from "../../components/InputComponent/InputComponent";
@@ -30,7 +30,7 @@ import { updateUser } from "../../redux/slides/UserSlide";
 const CartPage = () => {
   const order = useSelector((state) => state.order);
   const user = useSelector((state) => state.user);
-
+  console.log('state',order)
   const [form] = Form.useForm();
   const [isOpenModal, setIsModalOpen] = useState(false);
   const [stateUserDetails, setStateUserDetails] = useState({
@@ -39,6 +39,7 @@ const CartPage = () => {
     phone: "",
     city: "",
   });
+  
 
   const mutationUpdate = useMutationHooks((data) => {
     const { id, token, ...rests } = data;
@@ -46,7 +47,7 @@ const CartPage = () => {
     return res;
   });
   const {isLoading=false} = mutationUpdate 
-  // const navigate = useNavigate()
+  const navigate = useNavigate()
   const {success,error} = useMessage();
 
 
@@ -91,6 +92,12 @@ const CartPage = () => {
     }
   },[isOpenModal])
 
+  const handleChangeAddress = () => {
+    setIsModalOpen(true)
+  }
+  useEffect(() =>{
+
+  })
   useEffect(()=>{
     form.setFieldsValue(stateUserDetails)
   },[form,stateUserDetails])
@@ -99,6 +106,15 @@ const CartPage = () => {
     return order?.orderItems?.reduce((total, item) => {
       if (listChecked.includes(item.product)) {
         return total + (item.price * item.amount * (100 - item.discount)) / 100;
+      }
+      return total;
+    }, 0);
+  }, [order?.orderItems, listChecked]);
+
+  const priceDicount = useMemo(() => {
+    return order?.orderItems?.reduce((total, item) => {
+      if (listChecked.includes(item.product)) {
+        return total + (item.price * item.amount * item.discount) / 100;
       }
       return total;
     }, 0);
@@ -113,13 +129,16 @@ const CartPage = () => {
       return 10000;
     }
   }, [priceMemo]);
-
+  console.log('tt',order)
   const handleAddCart = () => {
     if(!order?.orderItemSlected?.length){
       error('Chọn sản phẩm trước khi thanh toán!')
     }else if (!user?.phone || !user?.address || !user?.name) {
       setIsModalOpen(true);
-    } 
+    }else{
+      navigate('/payment',{ 
+        state: { orderItemSlected: listChecked}})
+    }
   };
   const handleOk = () => {
     const {name,address,city,phone} = stateUserDetails
@@ -315,7 +334,35 @@ const CartPage = () => {
                     }).format(priceMemo)}
                   </span>
                 </div>
-
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "rgb(36,36,36)",
+                      fontWeight: 400,
+                      fontSize: "13px",
+                    }}
+                  >
+                    Giảm giá
+                  </span>
+                  <span
+                    style={{
+                      color: "#000",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(priceDicount)}
+                  </span>
+                </div>
                 <div
                   style={{
                     display: "flex",
@@ -346,7 +393,7 @@ const CartPage = () => {
                   </span>
                 </div>
               </WrapperInfo>
-
+              
               <WrapperInfo>
                 <div
                   style={{
@@ -378,6 +425,14 @@ const CartPage = () => {
                   </span>
                 </div>
               </WrapperInfo>
+              <WrapperInfo>
+                <div>
+                  <span>Địa chỉ: </span>
+                  <span style={{fontWeight:'bold'}}>{user?.address}</span>
+                  
+                </div>
+              </WrapperInfo>
+              <WrapperInfo><span onClick={handleChangeAddress} style={{color:'blue', cursor:'pointer'}}>Cập nhật thông tin giao hàng</span></WrapperInfo>
               <div
                 style={{
                   display: "flex",
@@ -399,7 +454,7 @@ const CartPage = () => {
                     border: "none",
                     borderRadius: "4px",
                   }}
-                  textButton={"Thanh toán"}
+                  textButton={"Mua hàng"}
                   styletextButton={{
                     color: "#fff",
                     fontSize: "15px",

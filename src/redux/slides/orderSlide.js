@@ -26,13 +26,14 @@ export const orderSlice = createSlice({
   reducers: {
     addOrderProduct: (state, action) => {
         const {orderItem} = action.payload
-        console.log('order',orderItem)
+        
         const itemOrder = state?.orderItems?.find((item)=> item?.product === orderItem.product)
         if(itemOrder){
             itemOrder.amount += orderItem?.amount
         }else{
             state.orderItems.push(orderItem)
         }
+        console.log('ttt',state.orderItems)
       },
       increaseAmount: (state, action) => {
         const idProduct  = action.payload;
@@ -59,7 +60,6 @@ export const orderSlice = createSlice({
       
       removeOrderProduct: (state, action) => {
         const idProduct = action.payload;
-        // Lọc ra các sản phẩm KHÔNG phải idProduct cần xóa
         state.orderItems = state.orderItems.filter((item) => item?.product !== idProduct);
         state.orderItemSlected = state.orderItemSlected.filter((item) => item?.product !== idProduct);
       },

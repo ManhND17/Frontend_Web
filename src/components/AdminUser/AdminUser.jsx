@@ -219,7 +219,7 @@ const AdminUser = () => {
 
   const user = useSelector((state) => state?.user);
   const getAllUser = async (rowSelected) => {
-    const res = await UserService.getAllUser(rowSelected);
+    const res = await UserService.getAllUser(user?.access_token);
     console.log(res);
     return res;
   };
