@@ -130,23 +130,26 @@ const PaymentPage = () => {
     }
   };
 
-  const { isPending: isLoadingPayment, isError, isSuccess,data} = mutationAddOrder;
-  useEffect(()=>{
-    if(isSuccess&& data.statusText ==="OK"){
-      dispatch(removeAllOrderProduct({listChecked}))
-      success('Đặt hàng thành công')
-      navigate('/orderSuccess',{
-        state:{
+  const {isSuccess,data} = mutationAddOrder;
+  useEffect(() => {
+    console.log(data,isSuccess);
+  
+    if (data?.data?.status === "OK" && isSuccess) {
+      dispatch(removeAllOrderProduct({ listChecked }));
+      success("Đặt hàng thành công");
+      navigate("/orderSuccess", {
+        state: {
           deliveryMethod,
           paymentMethod,
           orders: order?.orderItemSlected,
-          total: totalMeno
-        }
-      })
-    }else if(isError){
-      error('Đặt hàng không thành công')
-    }
-  })
+          total: totalMeno,
+        },
+      });
+    } else if (isSuccess) {
+      error(data?.data?.message);
+    } 
+  }, [data]);
+  
   const handleOk = () => {
     const { name, address, city, phone } = stateUserDetails;
     if (name && address && city && phone) {
@@ -178,7 +181,6 @@ const PaymentPage = () => {
   };
   return (
     <div style={{ background: "#f5f5ff", width: "100%", height: "100vh" }}>
-      <Loading isLoading={isLoadingPayment}>
         <div style={{ height: "100%", width: "1270px", margin: "0 auto" }}>
           <h3>Thanh toán</h3>
           <div style={{ display: "flex", justifyContent: "center" }}>
@@ -517,7 +519,6 @@ const PaymentPage = () => {
             </Form>
           </Loading>
         </ModalComponent>
-      </Loading>
     </div>
   );
 };

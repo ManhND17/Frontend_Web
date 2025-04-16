@@ -59,6 +59,14 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
     }, 1000);
   };
 
+  const handleNavigateOrder= () => {
+    setLoading(true);
+    navigate("/my-order");
+    setTimeout(async () => {
+      setLoading(false);
+    }, 1000);
+  };
+
   const [isLoggedOut, setIsLoggedOut] = useState(false);
 
   const handleLogout = async () => {
@@ -95,18 +103,21 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
 
   const content = (
     <div>
-      <WrapperContentPopup onClick={handleLogout}>
-        Đăng xuất
-      </WrapperContentPopup>
+      
       <WrapperContentPopup onClick={handleNavigateProfile}>
         Thông tin người dùng
       </WrapperContentPopup>
+      <WrapperContentPopup onClick={handleNavigateOrder}>
+          Đơn hàng của tôi
+        </WrapperContentPopup>
       {user.isAdmin && (
         <WrapperContentPopup onClick={handleNavigateAdmin}>
           Quản lý hệ thống
         </WrapperContentPopup>
       )}
-      
+      <WrapperContentPopup onClick={handleLogout}>
+        Đăng xuất
+      </WrapperContentPopup>
     </div>
   );
 

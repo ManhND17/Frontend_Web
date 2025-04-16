@@ -1,5 +1,5 @@
 import React from "react";
-import { WrapperInfo, WrapperLeft, WrapperRight } from "./style";
+import { WrapperInfo, WrapperLeft} from "./style";
 
 import { useLocation } from "react-router-dom";
 import { orderContant } from "../../contant";

@@ -89,7 +89,7 @@ const ProductDetailsComponent = ({ idProduct }) => {
     retry: 3,
     retryDelay: 1000,
   });
-
+  console.log('detail',productDetails)
   if (!productDetails) return null;
 
   const handleAddOrderProduct = () =>{
@@ -185,6 +185,7 @@ const ProductDetailsComponent = ({ idProduct }) => {
           >
             {renderStars(productDetails?.rating)}
             <WrapperStyleText>| Đã bán {productDetails?.selled}</WrapperStyleText>
+            <WrapperStyleText>| Còn lại trong kho {productDetails?.countInStock}</WrapperStyleText>
           </div>
 
           <WrapperStylePrice>

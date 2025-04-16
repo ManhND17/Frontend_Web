@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
-import NarbarComponent from "../../components/NavbarComponent/NarbarComponent";
 import CardComponent from "../../components/CardComponent/CardComponent";
 import { Row, Pagination, Col } from "antd";
-import { WrapperProducts, WrapperNavbar } from "./style";
+import { WrapperProducts } from "./style";
 import { useLocation, useNavigate } from "react-router-dom";
 import * as ProductService from "../../services/ProductService";
 import { Loading } from "../../components/LoadingComponent/Loading";
@@ -74,10 +73,7 @@ export const TypeProductPage = () => {
               height: "calc(100%-20px)",
             }}
           >
-            <WrapperNavbar span={4}>
-              <NarbarComponent />
-            </WrapperNavbar>
-            <Col span={20}>
+            <Col span={28}>
               <WrapperProducts>
                 {filteredProducts.map((data) => (
                   <CardComponent

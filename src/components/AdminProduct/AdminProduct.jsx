@@ -29,8 +29,20 @@ const AdminProduct = () => {
   const searchInput = useRef(null);
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(10);
-  const [total, setTotal] = useState(0); 
+  const [total, setTotal] = useState(0);
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
+  const inittial = () => ({
+    name: "",
+    price: "",
+    description: "",
+    rating: "",
+    type: "",
+    image: "",
+    countInStock: "",
+    selled: 0,
+    discount: " ",
+    newType: "",
+  });
   const [stateProduct, setStateProduct] = useState({
     name: "",
     price: "",
@@ -225,14 +237,15 @@ const AdminProduct = () => {
     });
     return res;
   });
+
   const [form] = Form.useForm();
   const { success, error } = useMessage();
   const { data, isSuccess, isError } = mutation;
 
   const user = useSelector((state) => state?.user);
 
-  const getAllProduct = async (page,limit) => {
-    const res = await ProductService.getAllProduct(null,page,limit);
+  const getAllProduct = async (page, limit) => {
+    const res = await ProductService.getAllProduct(null, page, limit);
     if (res.status === "OK") {
       setTotal(res.total);
     }
@@ -250,7 +263,6 @@ const AdminProduct = () => {
     retryDelay: 1000,
   });
 
-  
   const fetchGetDetailsProduct = useCallback(async () => {
     if (!rowSelected) return;
     const res = await ProductService.getDetailProduct(rowSelected);
@@ -272,7 +284,12 @@ const AdminProduct = () => {
 
   useEffect(() => {
     form.setFieldsValue(stateProductDetails);
-  }, [form, stateProductDetails]);
+    if (isModalOpen) {
+      const empty = inittial();
+      form.setFieldsValue(empty);
+      setStateProduct(empty);
+    }
+  }, [form, stateProductDetails,isModalOpen]);
 
   useEffect(() => {
     if (rowSelected) {
@@ -307,7 +324,6 @@ const AdminProduct = () => {
     });
     form.resetFields();
   }, [form]);
-  console.log(stateProduct);
 
   const onFinish = () => {
     const params = {
@@ -324,12 +340,19 @@ const AdminProduct = () => {
       selled: stateProduct.selled,
       discount: stateProduct.discount,
     };
-    console.log("test", params);
     mutation.mutate(params, {
       onSettled: () => {
         refetch();
       },
     });
+  };
+  const handleCreateProduct = async () => {
+    try {
+      await form.validateFields();
+      onFinish(); // Gọi hàm onFinish bạn đang dùng
+    } catch (error) {
+      console.log("Lỗi validate:", error);
+    }
   };
 
   const handleOnchange = (e) => {
@@ -384,6 +407,7 @@ const AdminProduct = () => {
       }
     );
   };
+
   const {
     data: dataUpdate,
     isSuccess: isSuccessUpdate,
@@ -447,7 +471,7 @@ const AdminProduct = () => {
   useEffect(() => {
     if (isSuccessDelete && dataDelete?.status === "OK") {
       success("Xóa sản phẩm thành công");
-      refetch()
+      refetch();
       handleCancel();
     } else if (isErrorDelete) {
       error("Xảy ra lỗi");
@@ -545,7 +569,7 @@ const AdminProduct = () => {
             pageSize: limit,
             total: total,
             onChange: (page, pageSize) => {
-              setPage(page - 1); 
+              setPage(page - 1);
               setLimit(pageSize);
             },
           }}
@@ -734,7 +758,7 @@ const AdminProduct = () => {
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
             <Space size={20}>
               <Button onClick={handleCancel}>Hủy</Button>
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" onClick={handleCreateProduct}>
                 Tạo sản phẩm
               </Button>
             </Space>

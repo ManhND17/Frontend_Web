@@ -218,9 +218,8 @@ const AdminUser = () => {
   const { data, isSuccess, isError } = mutation;
 
   const user = useSelector((state) => state?.user);
-  const getAllUser = async (rowSelected) => {
+  const getAllUser = async () => {
     const res = await UserService.getAllUser(user?.access_token);
-    console.log(res);
     return res;
   };
   const queryUser = useQuery({
