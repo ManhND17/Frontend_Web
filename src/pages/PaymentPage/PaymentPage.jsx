@@ -137,7 +137,7 @@ const PaymentPage = () => {
     if (data?.data?.status === "OK" && isSuccess) {
       dispatch(removeAllOrderProduct({ listChecked }));
       success("Đặt hàng thành công");
-      navigate("/orderSuccess", {
+      navigate("/my-order", {
         state: {
           deliveryMethod,
           paymentMethod,

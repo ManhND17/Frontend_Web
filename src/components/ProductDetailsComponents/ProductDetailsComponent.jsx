@@ -23,13 +23,13 @@ import { Loading } from "../LoadingComponent/Loading";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { addOrderProduct } from "../../redux/slides/orderSlide";
-
+import { useMessage } from "../../components/Message/MessageProvider";
 
 const ProductDetailsComponent = ({ idProduct }) => {
-  const user = useSelector((state)=>state.user)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const dispatch = useDispatch()
+  const user = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
 
   const [quantity, setQuantity] = useState(1);
   const fetchGetDetailsProduct = async ({ queryKey }) => {
@@ -89,25 +89,31 @@ const ProductDetailsComponent = ({ idProduct }) => {
     retry: 3,
     retryDelay: 1000,
   });
-  console.log('detail',productDetails)
+  const { success } = useMessage();
   if (!productDetails) return null;
 
-  const handleAddOrderProduct = () =>{
-    if(!user?.id){
-      navigate('/sign-in',{state: location?.pathname})
-    }else {
-      dispatch(addOrderProduct({
-        orderItem: {
-          name: productDetails?.name,
-          amount: quantity,
-          discount: productDetails?.discount,
-          image: productDetails?.image,
-          price: productDetails?.price,
-          product: productDetails?._id
-        }
-      }))
+  const handleAddOrderProduct = () => {
+    if (!user?.id) {
+      navigate("/sign-in", { state: location?.pathname });
+    } else {
+      dispatch(
+        addOrderProduct({
+          orderItem: {
+            name: productDetails?.name,
+            amount: quantity,
+            discount: productDetails?.discount,
+            image: productDetails?.image,
+            price: productDetails?.price,
+            product: productDetails?._id,
+          },
+        })
+      );
+      if (true) {
+        success("Đã thêm vào giỏ hàng!");
+      }
     }
-  }
+  };
+
   return (
     <Loading isLoading={isLoading}>
       <Row style={{ padding: "16px", background: "#fff", borderRadius: "4px" }}>
@@ -184,8 +190,12 @@ const ProductDetailsComponent = ({ idProduct }) => {
             }}
           >
             {renderStars(productDetails?.rating)}
-            <WrapperStyleText>| Đã bán {productDetails?.selled}</WrapperStyleText>
-            <WrapperStyleText>| Còn lại trong kho {productDetails?.countInStock}</WrapperStyleText>
+            <WrapperStyleText>
+              | Đã bán {productDetails?.selled}
+            </WrapperStyleText>
+            <WrapperStyleText>
+              | Còn lại trong kho {productDetails?.countInStock}
+            </WrapperStyleText>
           </div>
 
           <WrapperStylePrice>
@@ -195,10 +205,17 @@ const ProductDetailsComponent = ({ idProduct }) => {
           </WrapperStylePrice>
           <WrapperAdress style={{ paddingLeft: "10px" }}>
             <span>Giao đến </span>
-            <span className="address">
-              {user.address}
+            <span className="address">{user.address}</span>
+            <span
+              className="change-address"
+              style={{ cursor: "pointer" }}
+              onClick={() => {
+                navigate("/profile-user");
+              }}
+            >
+              {" "}
+              Đổi địa chỉ
             </span>
-            <span className="change-address" style={{cursor:'pointer'}} onClick={()=>{navigate('/profile-user')}}> Đổi địa chỉ</span>
           </WrapperAdress>
           <div
             style={{
@@ -275,8 +292,26 @@ const ProductDetailsComponent = ({ idProduct }) => {
                 border: "none",
                 borderRadius: "4px",
               }}
-              onClick={handleAddOrderProduct}
-              textButton={"Chọn mua"}
+              onClick={() => {
+                if (!user?.id) {
+                  navigate("/sign-in");
+                } else {
+                  dispatch(
+                    addOrderProduct({
+                      orderItem: {
+                        name: productDetails?.name,
+                        amount: quantity,
+                        discount: productDetails?.discount,
+                        image: productDetails?.image,
+                        price: productDetails?.price,
+                        product: productDetails?._id,
+                      },
+                    })
+                  );
+                  navigate("/cart");
+                }
+              }}
+              textButton={"Mua"}
               styletextButton={{
                 color: "#fff",
                 fontSize: "15px",
@@ -293,7 +328,8 @@ const ProductDetailsComponent = ({ idProduct }) => {
                 border: "1px solid rgb(13,92,182)",
                 borderRadius: "4px",
               }}
-              textButton={"Thêm vào giỏ hàng"}
+              onClick={handleAddOrderProduct}
+              textButton={"Thêm giỏ hàng"}
               styletextButton={{ color: "rgb(13,92,182)", fontSize: "15px" }}
             ></ButtonComponent>
           </div>

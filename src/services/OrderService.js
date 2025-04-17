@@ -27,3 +27,16 @@ const res = await axiosJWT.get(
   })
   return res;
 }
+
+export const deleteOrder = async (id,access_token,data) => {
+  const res = await axiosJWT.delete(
+    `${process.env.REACT_APP_API_URL}/order/delete/${id}`,
+    {
+      headers: {
+        data,
+        token: `Bearer ${access_token}`,
+      },
+      withCredentials: true,
+    })
+    return res;
+  }

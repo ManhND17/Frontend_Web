@@ -1,6 +1,5 @@
 import HomePage from "../pages/HomePage/HomePage"
 import CartPage from "../pages/CartPage/CartPage"
-import OrderSuccess from "../pages/OrderSuccess/OrderSuccess"
 import NotFoundPage from "../pages/NotFoundPage/NotFoundPage"
 import {TypeProductPage} from "../pages/TypeProductPage/TypeProductPage"
 import ProductDetailsPage from "../pages/ProductDetailsPage/ProductDetailsPage"
@@ -35,12 +34,6 @@ export const routes = [
     {
         path: '/cart',
         page: CartPage,
-        isShowHeader: true,
-        isShowFotter: true
-    },
-    {
-        path: '/orderSuccess',
-        page: OrderSuccess,
         isShowHeader: true,
         isShowFotter: true
     },
