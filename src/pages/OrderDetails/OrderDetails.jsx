@@ -10,9 +10,17 @@ const OrderSuccess = () => {
   const { order } = state;
 
   return (
-    <div style={{ background: "#f5f5ff", minHeight: "100vh", padding: "40px 0" }}>
+    <div
+      style={{ background: "#f5f5ff", minHeight: "100vh", padding: "40px 0" }}
+    >
       <div style={{ width: "1270px", margin: "0 auto" }}>
-        <h2 style={{ textAlign: "center", marginBottom: "24px", fontWeight: "700" }}>
+        <h2
+          style={{
+            textAlign: "center",
+            marginBottom: "24px",
+            fontWeight: "700",
+          }}
+        >
           Chi tiết đơn hàng
         </h2>
 
@@ -30,15 +38,19 @@ const OrderSuccess = () => {
             >
               <WrapperInfo style={{ marginBottom: "16px" }}>
                 <div style={{ fontWeight: "bold", marginBottom: "4px" }}>
-                  Mã đơn hàng: <span style={{ fontWeight: "normal" }}>{order._id}</span>
+                  Mã đơn hàng:{" "}
+                  <span style={{ fontWeight: "normal" }}>{order._id}</span>
                 </div>
                 <div style={{ fontWeight: "bold", marginBottom: "4px" }}>
-                  Trạng thái đơn hàng: <span style={{ fontWeight: "normal" }}>{order.status}</span>
+                  Trạng thái đơn hàng:{" "}
+                  <span style={{ fontWeight: "normal" }}>{order.status}</span>
                 </div>
               </WrapperInfo>
 
               <div style={{ marginBottom: "24px" }}>
-                <WrapperInfo style={{ fontWeight: "bold", marginBottom: "8px" }}>
+                <WrapperInfo
+                  style={{ fontWeight: "bold", marginBottom: "8px" }}
+                >
                   Phương thức thanh toán
                 </WrapperInfo>
                 <div
@@ -50,7 +62,13 @@ const OrderSuccess = () => {
                     fontSize: "15px",
                   }}
                 >
-                  <div style={{ marginBottom: "4px", color: "#ea8500", fontWeight: "600" }}>
+                  <div
+                    style={{
+                      marginBottom: "4px",
+                      color: "#ea8500",
+                      fontWeight: "600",
+                    }}
+                  >
                     {order?.paymentMethod}
                   </div>
                   <div>{orderContant.payment[order?.paymentMethod]}</div>
@@ -58,7 +76,9 @@ const OrderSuccess = () => {
               </div>
 
               <div style={{ marginBottom: "24px" }}>
-                <WrapperInfo style={{ fontWeight: "bold", marginBottom: "8px" }}>
+                <WrapperInfo
+                  style={{ fontWeight: "bold", marginBottom: "8px" }}
+                >
                   Thông tin giao hàng
                 </WrapperInfo>
                 <div
@@ -72,17 +92,67 @@ const OrderSuccess = () => {
                   }}
                 >
                   <div>👤 Tên người nhận: {order.shippingAddress.fullName}</div>
-                  <div>🏠 Địa chỉ: {order.shippingAddress.address}, {order.shippingAddress.city}</div>
+                  <div>
+                    🏠 Địa chỉ: {order.shippingAddress.address},{" "}
+                    {order.shippingAddress.city}
+                  </div>
                   <div>📞 Số điện thoại: {order.shippingAddress.phone}</div>
+                </div>
+              </div>
+              <div style={{ marginBottom: "24px" }}>
+                <WrapperInfo
+                  style={{ fontWeight: "bold", marginBottom: "8px" }}
+                >
+                  Mã giảm giá
+                </WrapperInfo>
+                <div
+                  style={{
+                    backgroundColor: "#f0f6ff",
+                    border: "1px solid #cce0ff",
+                    padding: "16px",
+                    borderRadius: "8px",
+                    fontSize: "15px",
+                    lineHeight: "1.8",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ marginBottom: "4px" }}>
+                      <span style={{ fontWeight: "600", color: "#333" }}>
+                        Mã:{" "}
+                      </span>
+                      <span style={{ fontStyle: "italic", color: "#1677ff" }}>
+                        {order.VoucherCode|| "Không có"}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ fontWeight: "600", color: "#333" }}>
+                      Giảm:{" "}
+                    </span>
+                    <span style={{ color: "#d4380d", fontWeight: "bold" }}>
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(order.VoucherDiscount)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <div style={{ marginBottom: "24px" }}>
-                <WrapperInfo style={{ fontWeight: "bold", marginBottom: "12px" }}>
+                <WrapperInfo
+                  style={{ fontWeight: "bold", marginBottom: "12px" }}
+                >
                   Danh sách sản phẩm đã đặt
                 </WrapperInfo>
                 {order?.orderItems.map((item) => (
-                  <WrapperItemOrder key={item.product} style={{ marginBottom: "16px" }}>
+                  <WrapperItemOrder
+                    key={item.product}
+                    style={{ marginBottom: "16px" }}
+                  >
                     <div
                       style={{
                         display: "flex",
@@ -110,7 +180,10 @@ const OrderSuccess = () => {
                             style: "currency",
                             currency: "VND",
                           }).format(
-                            (item?.price * item?.amount * (100 - item?.discount)) / 100
+                            (item?.price *
+                              item?.amount *
+                              (100 - item?.discount)) /
+                              100
                           )}
                         </div>
                       </div>
@@ -119,7 +192,13 @@ const OrderSuccess = () => {
                 ))}
               </div>
 
-              <div style={{ textAlign: "right", fontSize: "16px", marginBottom: "8px" }}>
+              <div
+                style={{
+                  textAlign: "right",
+                  fontSize: "16px",
+                  marginBottom: "8px",
+                }}
+              >
                 <span style={{ color: "black" }}>
                   Phí giao hàng:{" "}
                   <strong style={{ color: "#ea8500" }}>

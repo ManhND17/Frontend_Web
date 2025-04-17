@@ -172,7 +172,7 @@ const SignUpPage = () => {
             border="none"
             styleButton={{
               background: "rgb(255,57,69)",
-              height: "48px",
+              height: "50px",
               width: "100%",
               border: "none",
               margin: "26px 0 10px",

@@ -75,7 +75,7 @@ const CartPage = () => {
 
   useEffect(() => {
     dispatch(selectedOrder({ listChecked }));
-  }, [listChecked, dispatch]);
+  }, [dispatch,listChecked]);
 
   useEffect(() => {
     if (isOpenModal) {
@@ -87,7 +87,11 @@ const CartPage = () => {
         address: user?.address,
       });
     }
-  }, [isOpenModal]);
+  }, [isOpenModal,stateUserDetails, 
+    user?.address, 
+    user?.city, 
+    user?.name, 
+    user?.phone]);
 
   const handleChangeAddress = () => {
     setIsModalOpen(true);
@@ -116,12 +120,12 @@ const CartPage = () => {
   }, [order?.orderItems, listChecked]);
 
   const diliveryPriceMeno = useMemo(() => {
-    if (priceMemo > 2000000) {
+    if (priceMemo > 1000000) {
       return 0;
     } else if (priceMemo === 0) {
       return 0;
     } else {
-      return 10000;
+      return 30000;
     }
   }, [priceMemo]);
 

@@ -4,11 +4,10 @@ import * as OrderService from "../../services/OrderService";
 import { useSelector } from "react-redux";
 import { WrapperInfo } from "./style";
 import { WrapperItemOrder } from "./style";
-import { Button} from "antd";
+import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useMutationHooks } from "../../hooks/useMutationHook";
 import { useMessage } from "../../components/Message/MessageProvider";
-
 
 const MyOrderPage = () => {
   const user = useSelector((state) => state.user);
@@ -29,23 +28,23 @@ const MyOrderPage = () => {
   });
 
   const { data } = queryOrder;
-  const mutationDeleteOrder = useMutationHooks((id,data) => {
+  const mutationDeleteOrder = useMutationHooks((id, data) => {
     const res = OrderService.deleteOrder(id, user?.access_token, data);
     return res;
   });
   const handelDeleteOrder = (id, data) => {
-    mutationDeleteOrder.mutate(id,data)
+    mutationDeleteOrder.mutate(id, data);
   };
-  const {success,error} = useMessage()
-  const {isError,isSuccess} = mutationDeleteOrder
-  useEffect (()=>{
-    if(isSuccess){
-      queryOrder.refetch(); 
-      success('Hủy đặt hàng thành công')
-    }else if(isError){
-      error('Hủy đặt hàng thất bại')
+  const { success, error } = useMessage();
+  const { isError, isSuccess } = mutationDeleteOrder;
+  useEffect(() => {
+    if (isSuccess) {
+      queryOrder.refetch();
+      success("Hủy đặt hàng thành công");
+    } else if (isError) {
+      error("Hủy đặt hàng thất bại");
     }
-  },[isError,isSuccess,error,success,queryOrder])
+  }, [isError, isSuccess, error, success, queryOrder]);
   return (
     <div
       style={{
@@ -98,9 +97,7 @@ const MyOrderPage = () => {
                     }}
                   >
                     Mã đơn hàng #{order._id} - Trạng thái:{" "}
-                    <span style={{ color: "#52c41a" }}>
-                      {order.status}
-                    </span>
+                    <span style={{ color: "#52c41a" }}>{order.status}</span>
                   </div>
 
                   {order.orderItems?.map((item, itemIndex) => (
@@ -134,38 +131,27 @@ const MyOrderPage = () => {
                         }}
                       >
                         <span>Số lượng: {item?.amount}</span>
-                        <span style={{ fontWeight: 500 }}>
-                          Giá tiền:{" "}
+
+                        <span
+                          style={{
+                            color: "red",
+                            marginTop: "12px",
+                            textAlign: "right",
+                            fontWeight: "bold",
+                            fontSize: "16px",
+                          }}
+                        >
+                          Tổng tiền:{" "}
                           {new Intl.NumberFormat("vi-VN", {
                             style: "currency",
                             currency: "VND",
-                          }).format(
-                            (item?.price *
-                              item?.amount *
-                              (100 - item?.discount)) /
-                              100
-                          )}
+                          }).format(order?.totalPrice)}
                         </span>
                       </div>
                     </WrapperItemOrder>
                   ))}
 
                   {/* ✅ Tổng tiền */}
-                  <div
-                    style={{
-                      color: "red",
-                      marginTop: "12px",
-                      textAlign: "right",
-                      fontWeight: "bold",
-                      fontSize: "16px",
-                    }}
-                  >
-                    Tổng tiền:{" "}
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(order?.totalPrice)}
-                  </div>
 
                   {/* ✅ Nút thao tác */}
                   <div
@@ -188,7 +174,10 @@ const MyOrderPage = () => {
                     >
                       Xem chi tiết
                     </Button>
-                    <Button danger onClick={() => handelDeleteOrder(order._id, order)}>
+                    <Button
+                      danger
+                      onClick={() => handelDeleteOrder(order._id, order)}
+                    >
                       Hủy đơn hàng
                     </Button>
                   </div>

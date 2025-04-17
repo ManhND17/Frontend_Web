@@ -68,7 +68,9 @@ const HomePage = () => {
       </div>
       <div id="container" style={{ padding: "0 120px" }}>
         <SliderComponent arrImages={[slider1, slider2, slider3]} />
-        <div
+        {!searchDebounce && (
+          <>
+           <div
           style={{
             display: "flex",
             margin: "10px 120px 10px",
@@ -76,6 +78,7 @@ const HomePage = () => {
             alignItems: "center",
           }}
         >
+        
           MẪU BÁN CHẠY
         </div>
         <WrapperProducts>
@@ -97,6 +100,9 @@ const HomePage = () => {
             );
           })}
         </WrapperProducts>
+          </>
+        )}
+       
         <div
           style={{
             display: "flex",
@@ -141,6 +147,7 @@ const HomePage = () => {
               border: "1px solid rgb(11,116,229)",
               color: "rgb(11, 116, 229)",
               width: "160px",
+              height: '40px',
               marginBottom: "10px",
             }}
             disabled={
@@ -160,6 +167,7 @@ const HomePage = () => {
               border: "1px solid rgb(11,116,229)",
               color: "rgb(11, 116, 229)",
               width: "160px",
+              height: '40px',
               marginBottom: "10px",
               marginLeft: "30px", // 👈 Cách nút trước 30px
             }}
