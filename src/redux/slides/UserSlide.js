@@ -2,14 +2,14 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   name: '',
-  email:'',
-  phone:'',
-  address:'',
-  avatar:'',
-  id:'',
-  access_token:'',
-  isAdmin:false,
-  isLoading:false,
+  email: '',
+  phone: '',
+  address: '',
+  avatar: '',
+  id: '',
+  access_token: '',
+  isAdmin: false,
+  isLoading: false,
   city: '',
 }
 
@@ -17,25 +17,42 @@ export const userSlide = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    updateUser: (state,action) =>{
-        const {name,email,_id,phone='',address='',avatar='',access_token,isAdmin='false',city=''} = action.payload
-        state.name = name;
-        state.phone = phone
-        state.address = address
-        state.id = _id
-        state.avatar = avatar
-        state.email = email
-        state.access_token = access_token
-        state.isAdmin = isAdmin
-        state.city = city
+    updateUser: (state, action) => {
+      // Giữ nguyên các giá trị hiện tại nếu payload không cung cấp
+      const { 
+        name = state.name, 
+        email = state.email,
+        _id = state.id,
+        phone = state.phone,
+        address = state.address,
+        avatar = state.avatar,
+        access_token = state.access_token,
+        isAdmin = state.isAdmin,
+        city = state.city
+      } = action.payload;
+      
+      // Cập nhật state
+      state.name = name;
+      state.email = email;
+      state.id = _id; // Sử dụng cả _id và id để tương thích
+      state.phone = phone;
+      state.address = address;
+      state.avatar = avatar;
+      state.access_token = access_token;
+      state.isAdmin = isAdmin;
+      state.city = city;
     },
-    logout: () =>{
-      return initialState
+    resetUser: (state) => {
+      // Giữ nguyên isLoading nếu cần
+      return { ...initialState, isLoading: state.isLoading };
+    },
+    logout: () => {
+      return initialState;
     }
   }
 })
 
-// Action creators are generated for each case reducer function
-export const { updateUser, logout} = userSlide.actions
+// Action creators
+export const { updateUser, resetUser, logout } = userSlide.actions;
 
-export default userSlide.reducer
+export default userSlide.reducer;

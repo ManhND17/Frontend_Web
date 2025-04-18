@@ -57,7 +57,7 @@ export const WrapperQualityProduct = styled.h1`
   display: flex;
   gap: 8px;
   align-items: center;
-  width: 120px;
+  width: 110px;
   border: 1px solid #ccc;
   border-radius: 0;
 `;

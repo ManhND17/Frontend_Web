@@ -1,12 +1,7 @@
 import React, { useState } from "react";
-import { Row, Col, Image } from "antd";
-import product1 from "../../assets/images/adidas1.jpg";
-import product2 from "../../assets/images/adidas2.jpg";
-import product3 from "../../assets/images/adidas3.jpg";
+import { Row, Col, Image, Divider } from "antd";
 import {
   WrapperStyleNameProduct,
-  WrapperStyleImageSmall,
-  WrapperStyleColImage,
   WrapperStyleText,
   WrapperPriceText,
   WrapperStylePrice,
@@ -53,33 +48,39 @@ const ProductDetailsComponent = ({ idProduct }) => {
   const renderStars = (rating = 0) => {
     const stars = [];
     const fullStars = Math.floor(rating);
-    const hasHalfStar = rating - fullStars >= 0.25 && rating - fullStars < 0.75;
-
-    for (let i = 1; i <= 5; i++) {
-      if (i <= fullStars) {
-        stars.push(
-          <StarFilled
-            key={i}
-            style={{ fontSize: "20px", color: "rgb(253,216,54)" }}
-          />
-        );
-      } else if (i === fullStars + 1 && hasHalfStar) {
-        stars.push(
-          <StarTwoTone
-            key={i}
-            twoToneColor="rgb(253,216,54)"
-            style={{ fontSize: "20px" }}
-          />
-        );
-      } else {
-        stars.push(
-          <StarOutlined
-            key={i}
-            style={{ fontSize: "20px", color: "rgb(253,216,54)" }}
-          />
-        );
-      }
+    const decimalPart = rating % 1;
+  
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(
+        <StarFilled key={`full-${i}`} style={{ fontSize: "20px", color: "rgb(253,216,54)" }} />
+      );
     }
+  
+    if (decimalPart > 0) {
+      const percentage = Math.round(decimalPart * 100);
+      stars.push(
+        <div key="half" style={{ position: "relative", display: "inline-block" }}>
+          <StarOutlined style={{ fontSize: "20px", color: "rgb(253,216,54)", position: "relative" }} />
+          <div style={{
+            position: "absolute",
+            overflow: "hidden",
+            width: `${percentage}%`,
+            top: 0,
+            left: 0
+          }}>
+            <StarFilled style={{ fontSize: "20px", color: "rgb(253,216,54)" }} />
+          </div>
+        </div>
+      );
+    }
+  
+    const emptyStars = 5 - stars.length;
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(
+        <StarOutlined key={`empty-${i}`} style={{ fontSize: "20px", color: "rgb(253,216,54)" }} />
+      );
+    }
+  
     return stars;
   };
 
@@ -116,121 +117,139 @@ const ProductDetailsComponent = ({ idProduct }) => {
 
   return (
     <Loading isLoading={isLoading}>
-      <Row style={{ padding: "16px", background: "#fff", borderRadius: "4px" }}>
+      <Row
+        style={{
+          padding: "24px",
+          background: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          margin: "0 auto",
+          maxWidth: "1200px",
+          
+        }}
+      >
+        {/* Phần hình ảnh */}
         <Col
           span={10}
-          style={{ borderRight: "1px solid #e5e5e5", paddingLeft: "8px" }}
+          style={{
+            borderRight: "1px solid #f0f0f0",
+            padding: "0 24px 0 0",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
         >
           <Image
             src={productDetails.image}
             alt="image product"
             preview={false}
-            style={{ width: "500px" }}
+            style={{
+              width: "100%",
+              borderRadius: "4px",
+              border: "1px solid #f0f0f0",
+              aspectRatio: "1/1",
+              objectFit: "contain",
+            }}
           />
+
           <Row
             style={{
-              paddingTop: "10px",
-              gap: "1px",
+              gap: "8px",
               justifyContent: "space-between",
-              paddingRight: "10px",
             }}
           >
-            <WrapperStyleColImage span={4}>
-              <WrapperStyleImageSmall
-                src={product1}
-                alt="image product"
-                preview={false}
-              />
-            </WrapperStyleColImage>
-
-            <WrapperStyleColImage span={4}>
-              <WrapperStyleImageSmall
-                src={product2}
-                alt="image product"
-                preview={false}
-              />
-            </WrapperStyleColImage>
-
-            <WrapperStyleColImage span={4}>
-              <WrapperStyleImageSmall
-                src={product3}
-                alt="image product"
-                preview={false}
-              />
-            </WrapperStyleColImage>
-
-            <WrapperStyleColImage span={4}>
-              <WrapperStyleImageSmall
-                src={product2}
-                alt="image product"
-                preview={false}
-              />
-            </WrapperStyleColImage>
-
-            <WrapperStyleColImage span={4}>
-              <WrapperStyleImageSmall
-                src={product2}
-                alt="image product"
-                preview={false}
-              />
-            </WrapperStyleColImage>
+           
+            
           </Row>
         </Col>
 
-        <Col span={14} style={{ padding: "10px 0" }}>
-          <WrapperStyleNameProduct>
+        {/* Phần thông tin */}
+        <Col
+          span={14}
+          style={{
+            padding: "0 0 0 24px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <WrapperStyleNameProduct
+            style={{ fontSize: "24px", fontWeight: 500 }}
+          >
             {productDetails?.name}
           </WrapperStyleNameProduct>
+
           <div
             style={{
+              margin: "12px 0",
               display: "flex",
               alignItems: "center",
-              gap: "4px",
-              paddingLeft: "10px",
+              gap: "12px",
             }}
           >
-            {renderStars(productDetails?.rating)}
-            <WrapperStyleText>
-              | Đã bán {productDetails?.selled}
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              {renderStars(productDetails?.rating)}
+              <span style={{ color: "#1890ff", fontWeight: 500 }}>
+                {productDetails?.rating}
+              </span>
+            </div>
+            <Divider type="vertical" style={{ height: "16px", margin: 0 }} />
+            <WrapperStyleText style={{ color: "#666" }}>
+              Đã bán {productDetails?.selled}
             </WrapperStyleText>
-            <WrapperStyleText>
-              | Còn lại trong kho {productDetails?.countInStock}
+            <Divider type="vertical" style={{ height: "16px", margin: 0 }} />
+            <WrapperStyleText style={{ color: "#666" }}>
+              Còn lại {productDetails?.countInStock}
             </WrapperStyleText>
           </div>
 
-          <WrapperStylePrice>
-            <WrapperPriceText>
-              {Number(productDetails?.price).toLocaleString("vi-VN")}VND
+          <WrapperStylePrice
+            style={{
+              padding: "16px 0",
+              borderTop: "1px solid #f0f0f0",
+              borderBottom: "1px solid #f0f0f0",
+            }}
+          >
+            <WrapperPriceText style={{ fontSize: "28px", color: "#ff4d4f" }}>
+              {Number(productDetails?.price).toLocaleString("vi-VN")}₫
             </WrapperPriceText>
           </WrapperStylePrice>
-          <WrapperAdress style={{ paddingLeft: "10px" }}>
-            <span>Giao đến </span>
-            <span className="address">{user.address}</span>
+
+          <WrapperAdress
+            style={{
+              padding: "16px 0",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span style={{ color: "#666" }}>Giao đến</span>
+            <span className="address" style={{ fontWeight: 500 }}>
+              {user?.address || "Chưa cập nhật địa chỉ"}
+            </span>
             <span
               className="change-address"
-              style={{ cursor: "pointer" }}
-              onClick={() => {
-                navigate("/profile-user");
+              style={{
+                color: "#1890ff",
+                cursor: "pointer",
+                ":hover": {
+                  textDecoration: "underline",
+                },
               }}
+              onClick={() => navigate("/profile-user")}
             >
-              {" "}
               Đổi địa chỉ
             </span>
           </WrapperAdress>
-          <div
-            style={{
-              margin: "5px 0 20px",
-              paddingLeft: "10px",
-              borderTop: "1px solid #e5e5e5",
-              borderBottom: "1px solid #e5e5e5",
-            }}
-          >
-            <div style={{ marginBottom: "6px" }}>Số lượng</div>
+
+          <div style={{ padding: "16px 0"}}>
+            <div style={{ marginBottom: "12px", fontWeight: 500 }}>
+              Số lượng
+            </div>
             <WrapperQualityProduct>
               <button
                 onClick={handleDecrease}
                 style={{
-                  border: "none",
+                  border: "1px solid #d9d9d9",
                   background: "transparent",
                   height: "32px",
                   width: "32px",
@@ -238,9 +257,14 @@ const ProductDetailsComponent = ({ idProduct }) => {
                   justifyContent: "center",
                   alignItems: "center",
                   cursor: "pointer",
+                  // borderRadius: "4px 0 0 4px",
+                  ":hover": {
+                    borderColor: "#1890ff",
+                    color: "#1890ff",
+                  },
                 }}
               >
-                <MinusOutlined style={{ color: "#000", fontSize: "20px" }} />
+                <MinusOutlined style={{ fontSize: "14px" }} />
               </button>
 
               <WrapperInputNumber
@@ -250,17 +274,20 @@ const ProductDetailsComponent = ({ idProduct }) => {
                 size="small"
                 controls={false}
                 style={{
-                  width: "50px",
+                  width: "30px",
                   height: "32px",
                   textAlign: "center",
-                  lineHeight: "32px",
+                  // borderRadius: 0,
+                  borderLeft: "none",
+                  borderRight: "none",
+                  borderColor: "#d9d9d9",
                 }}
               />
 
               <button
                 onClick={handleIncrease}
                 style={{
-                  border: "none",
+                  border: "1px solid #d9d9d9",
                   background: "transparent",
                   height: "32px",
                   width: "32px",
@@ -268,29 +295,34 @@ const ProductDetailsComponent = ({ idProduct }) => {
                   justifyContent: "center",
                   alignItems: "center",
                   cursor: "pointer",
+                  // borderRadius: "0 2px 2px 0",
+                  ":hover": {
+                    borderColor: "#1890ff",
+                    color: "#1890ff",
+                  },
                 }}
               >
-                <PlusOutlined style={{ color: "#000", fontSize: "20px" }} />
+                <PlusOutlined style={{ fontSize: "14px" }} />
               </button>
             </WrapperQualityProduct>
+            <div style={{ marginTop: "8px", color: "#666", fontSize: "14px" }}>
+              {productDetails?.countInStock} sản phẩm có sẵn
+            </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              paddingLeft: "10px",
-            }}
-          >
+
+          <div style={{ padding: "24px 0", display: "flex", gap: "16px" }}>
             <ButtonComponent
-              size={40}
-              border={false}
+              size="large"
               styleButton={{
-                background: "rgb(255,57,69)",
+                background: "#ff4d4f",
                 height: "48px",
-                width: "220px",
+                flex: 1,
                 border: "none",
                 borderRadius: "4px",
+                transition: "all 0.3s",
+                ":hover": {
+                  background: "#ff7875",
+                },
               }}
               onClick={() => {
                 if (!user?.id) {
@@ -311,27 +343,36 @@ const ProductDetailsComponent = ({ idProduct }) => {
                   navigate("/cart");
                 }
               }}
-              textButton={"Mua"}
+              textButton={"Mua ngay"}
               styletextButton={{
                 color: "#fff",
-                fontSize: "15px",
-                fontWeight: "700",
+                fontSize: "16px",
+                fontWeight: "600",
               }}
-            ></ButtonComponent>
+            />
+
             <ButtonComponent
-              size={40}
-              border={false}
+              size="large"
               styleButton={{
                 background: "#fff",
                 height: "48px",
-                width: "220px",
-                border: "1px solid rgb(13,92,182)",
+                flex: 1,
+                border: "1px solid #1890ff",
                 borderRadius: "4px",
+                transition: "all 0.3s",
+                ":hover": {
+                  borderColor: "#40a9ff",
+                  color: "#40a9ff",
+                },
               }}
               onClick={handleAddOrderProduct}
-              textButton={"Thêm giỏ hàng"}
-              styletextButton={{ color: "rgb(13,92,182)", fontSize: "15px" }}
-            ></ButtonComponent>
+              textButton={"Thêm vào giỏ hàng"}
+              styletextButton={{
+                color: "#1890ff",
+                fontSize: "16px",
+                fontWeight: "500",
+              }}
+            />
           </div>
         </Col>
       </Row>

@@ -36,6 +36,11 @@ const MyOrderPage = () => {
     mutationDeleteOrder.mutate(id, data);
   };
   const { success, error } = useMessage();
+  const cancellableStatuses = [
+    "Chờ xử lý",
+    "Đã xác nhận",
+    "Đơn hàng đang chuẩn bị",
+  ];
   const { isError, isSuccess } = mutationDeleteOrder;
   useEffect(() => {
     if (isSuccess) {
@@ -151,9 +156,6 @@ const MyOrderPage = () => {
                     </WrapperItemOrder>
                   ))}
 
-                  {/* ✅ Tổng tiền */}
-
-                  {/* ✅ Nút thao tác */}
                   <div
                     style={{
                       display: "flex",
@@ -176,6 +178,7 @@ const MyOrderPage = () => {
                     </Button>
                     <Button
                       danger
+                      disabled={!cancellableStatuses.includes(order.status)}
                       onClick={() => handelDeleteOrder(order._id, order)}
                     >
                       Hủy đơn hàng

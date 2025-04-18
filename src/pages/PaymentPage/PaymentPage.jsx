@@ -9,14 +9,10 @@ import {
 } from "../../redux/slides/orderSlide";
 import { useNavigate } from "react-router-dom";
 import { useMessage } from "../../components/Message/MessageProvider";
-import ModalComponent from "../../components/ModalComponent/ModalComponent";
 import InputComponent from "../../components/InputComponent/InputComponent";
 import { useMutationHooks } from "../../hooks/useMutationHook";
-import * as UserService from "../../services/UserService";
 import * as OrderService from "../../services/OrderService";
 import * as VoucherService from "../../services/VoucherService";
-import { Loading } from "../../components/LoadingComponent/Loading";
-import { updateUser } from "../../redux/slides/UserSlide";
 import { useLocation } from "react-router-dom";
 
 const PaymentPage = () => {
@@ -29,7 +25,6 @@ const PaymentPage = () => {
   const [voucherInfo, setVoucherInfo] = useState(null);
 
   const [form] = Form.useForm();
-  const [isOpenModal, setIsModalOpen] = useState(false);
   const [stateUserDetails, setStateUserDetails] = useState({
     name: "",
     address: "",
@@ -42,11 +37,6 @@ const PaymentPage = () => {
   const listChecked = useMemo(() => {
     return state?.orderItemSlected || [];
   }, [state]);
-  const mutationUpdate = useMutationHooks((data) => {
-    const { id, token, ...rests } = data;
-    const res = UserService.updateUser(id, rests, token);
-    return res;
-  });
 
   const mutationAddOrder = useMutationHooks((data) => {
     const { token, ...rests } = data;
@@ -54,7 +44,6 @@ const PaymentPage = () => {
     return res;
   });
 
-  const { isLoading = false } = mutationUpdate;
   const navigate = useNavigate();
   const { success, error } = useMessage();
 
@@ -62,28 +51,6 @@ const PaymentPage = () => {
     dispatch(selectedOrder({ listChecked }));
   }, [listChecked, dispatch]);
 
-  useEffect(() => {
-    if (isOpenModal) {
-      setStateUserDetails({
-        ...stateUserDetails,
-        city: user?.city,
-        name: user?.name,
-        phone: user?.phone,
-        address: user?.address,
-      });
-    }
-  }, [
-    isOpenModal,
-    stateUserDetails,
-    user?.address,
-    user?.city,
-    user?.name,
-    user?.phone,
-  ]);
-
-  const handleChangeAddress = () => {
-    setIsModalOpen(true);
-  };
 
   useEffect(() => {
     form.setFieldsValue(stateUserDetails);
@@ -111,6 +78,7 @@ const PaymentPage = () => {
     return priceMemo + diliveryPriceMeno;
   }, [priceMemo, diliveryPriceMeno]);
   const handleAddOrder = () => {
+    console.log('first',user,order?.orderItemSlected )
     if (
       user?.access_token &&
       order?.orderItemSlected &&
@@ -170,36 +138,6 @@ const PaymentPage = () => {
     success,
     totalMeno,
   ]);
-
-  const handleOk = () => {
-    const { name, address, city, phone } = stateUserDetails;
-    if (name && address && city && phone) {
-      mutationUpdate.mutate({
-        id: user?.id,
-        token: user?.access_token,
-        ...stateUserDetails,
-      });
-      success("Cập nhật thông tin thành công!");
-      setIsModalOpen(false);
-      dispatch(updateUser({ ...user, ...stateUserDetails }));
-    }
-  };
-  const handleCancel = () => {
-    setStateUserDetails({
-      name: "",
-      address: "",
-      phone: "",
-      city: "",
-    });
-    form.resetFields();
-    setIsModalOpen(false);
-  };
-  const handleOnchangeDetails = (e) => {
-    setStateUserDetails({
-      ...stateUserDetails,
-      [e.target.name]: e.target.value,
-    });
-  };
 
   const handleApplyVoucher = async () => {
     if (!voucherCode) {
@@ -382,7 +320,6 @@ const PaymentPage = () => {
                   >
                     Mã giảm giá
                   </div>
-
                   <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                     <InputComponent
                       value={voucherCode}
@@ -424,6 +361,33 @@ const PaymentPage = () => {
                         }}
                       >
                         <span>
+                          <span>Giảm: </span>
+                          {voucherInfo.discount_percent}%
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <span>
+                          <span>Giá trị đơn hàng tối thiểu:</span>{" "}
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(voucherInfo.min_order_value)}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <span>
                           <span>Số tiền tối đa được giảm:</span>{" "}
                           {new Intl.NumberFormat("vi-VN", {
                             style: "currency",
@@ -431,7 +395,6 @@ const PaymentPage = () => {
                           }).format(voucherInfo.max_discount)}
                         </span>
                       </div>
-
                       <div
                         style={{
                           display: "flex",
@@ -440,24 +403,12 @@ const PaymentPage = () => {
                         }}
                       >
                         <span>
-                          <span>Giá tối thiểu để áp dụng:</span>{" "}
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(voucherInfo.min_order_value)}
-                        </span>
-                      </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                        }}
-                      >
-                        <span>
-                          <span>Giá trị voucher:</span> -
-                          {voucherInfo.discount_percent}%
+                          <span>Thời gian áp dụng:</span>{" "}
+                          {new Date(voucherInfo.start_date).toLocaleDateString(
+                            "vi-VN"
+                          )} đến {new Date(voucherInfo.end_date).toLocaleDateString(
+                            "vi-VN"
+                          )}
                         </span>
                       </div>
                     </div>
@@ -595,14 +546,6 @@ const PaymentPage = () => {
                   <span style={{ fontWeight: "bold" }}>{user?.address}</span>
                 </div>
               </WrapperInfo>
-              <WrapperInfo>
-                <span
-                  onClick={handleChangeAddress}
-                  style={{ color: "blue", cursor: "pointer" }}
-                >
-                  Cập nhật thông tin giao hàng
-                </span>
-              </WrapperInfo>
               <div
                 style={{
                   display: "flex",
@@ -634,76 +577,6 @@ const PaymentPage = () => {
           </WrapperRight>
         </div>
       </div>
-      <ModalComponent
-        title="Cập nhật thông tin giao hàng"
-        open={isOpenModal}
-        onCancel={handleCancel}
-        onOk={handleOk}
-      >
-        <Loading isLoading={isLoading}>
-          <Form
-            name="basic"
-            labelCol={{ span: 8 }}
-            wrapperCol={{ span: 16 }}
-            style={{ maxWidth: 600 }}
-            autoComplete="off"
-            form={form}
-          >
-            <Form.Item
-              label="Tên khách hàng"
-              name="name"
-              rules={[
-                { required: true, message: "Vui lòng nhập tên sản phẩm!" },
-              ]}
-            >
-              <InputComponent
-                value={stateUserDetails.name}
-                onChange={handleOnchangeDetails}
-                name="name"
-              />
-            </Form.Item>
-            <Form.Item
-              label="Số điện thoại"
-              name="phone"
-              rules={[
-                { required: true, message: "Vui lòng nhập số điện thoại!" },
-              ]}
-            >
-              <InputComponent
-                value={stateUserDetails.phone}
-                onChange={handleOnchangeDetails}
-                name="phone"
-              />
-            </Form.Item>
-            <Form.Item
-              label="Địa chỉ"
-              name="address"
-              rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
-            >
-              <InputComponent
-                value={stateUserDetails.address}
-                onChange={handleOnchangeDetails}
-                name="address"
-              />
-            </Form.Item>
-            <Form.Item
-              label="Tỉnh"
-              name="city"
-              rules={[{ required: true, message: "Vui lòng nhập tỉnh!" }]}
-            >
-              <InputComponent
-                value={stateUserDetails.city}
-                onChange={handleOnchangeDetails}
-                name="city"
-              />
-            </Form.Item>
-            <Form.Item
-              wrapperCol={{ span: 24 }}
-              style={{ textAlign: "right" }}
-            ></Form.Item>
-          </Form>
-        </Loading>
-      </ModalComponent>
     </div>
   );
 };

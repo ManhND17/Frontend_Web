@@ -30,6 +30,7 @@ import { updateUser } from "../../redux/slides/UserSlide";
 const CartPage = () => {
   const order = useSelector((state) => state.order);
   const user = useSelector((state) => state.user);
+  console.log('first',user)
   const [form] = Form.useForm();
   const [isOpenModal, setIsModalOpen] = useState(false);
   const [stateUserDetails, setStateUserDetails] = useState({
@@ -87,7 +88,7 @@ const CartPage = () => {
         address: user?.address,
       });
     }
-  }, [isOpenModal,stateUserDetails, 
+  }, [isOpenModal, 
     user?.address, 
     user?.city, 
     user?.name, 
@@ -96,7 +97,6 @@ const CartPage = () => {
   const handleChangeAddress = () => {
     setIsModalOpen(true);
   };
-  useEffect(() => {});
   useEffect(() => {
     form.setFieldsValue(stateUserDetails);
   }, [form, stateUserDetails]);
@@ -148,8 +148,9 @@ const CartPage = () => {
         token: user?.access_token,
         ...stateUserDetails,
       });
-      success("Cập nhật thông tin thành công!");
       setIsModalOpen(false);
+      success("Cập nhật thông tin thành công!");
+      
       dispatch(updateUser({ ...user, ...stateUserDetails }));
     }
   };

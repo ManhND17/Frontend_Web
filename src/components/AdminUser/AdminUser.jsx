@@ -18,7 +18,8 @@ import ModalComponent from "../ModalComponent/ModalComponent";
 import { useQuery } from "@tanstack/react-query";
 import { useMessage } from "../../components/Message/MessageProvider";
 import * as UserService from "../../services/UserService";
-import { useDownloadExcel } from "react-export-table-to-excel";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const WrapperUploadFile = ({ onChange, maxCount = 1 }) => (
   <Upload
@@ -55,8 +56,26 @@ const AdminUser = () => {
     phone: "",
     isAdmin: false,
   });
-  const tableRef = useRef(null);
-
+  const handleDownloadExcel = () => {
+    if (!products?.data) return;
+  
+    const dataExport = products.data.map((item) => ({
+      "Tên khách hàng": item.name,
+      "Email": item.email,
+      "Số điện thoại": item.phone,
+      "Địa chỉ": item.address,
+      "Admin": item.isAdmin,
+    }));
+  
+    const ws = XLSX.utils.json_to_sheet(dataExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Danh sách người dùng");
+  
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "Danh_sach_nguoi_dung.xlsx");
+  };
+  
   const renderAction = () => {
     return (
       <div>
@@ -72,11 +91,6 @@ const AdminUser = () => {
     );
   };
 
-  const { onDownload } = useDownloadExcel({
-    currentTableRef: tableRef.current,
-    filename: "Danh_sach_nguoi_dung",
-    sheet: "Users",
-  });
 
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
     confirm();
@@ -404,14 +418,14 @@ const AdminUser = () => {
       <div style={{ marginTop: "10px" }}>
         <Button
           type="primary"
-          onClick={onDownload}
+          onClick={handleDownloadExcel}
           style={{ float: "right", marginRight: 20, marginBottom: 10 }}
         >
           Xuất Excel
         </Button>
 
         <TableComponent
-          ref={tableRef}
+          rowSelection={null}
           columns={columns}
           data={
             isLoadingProduct

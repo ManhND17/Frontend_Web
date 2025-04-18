@@ -8,7 +8,7 @@ const OrderSuccess = () => {
   const location = useLocation();
   const { state } = location;
   const { order } = state;
-
+  console.log('ỏder',order)
   return (
     <div
       style={{ background: "#f5f5ff", minHeight: "100vh", padding: "40px 0" }}

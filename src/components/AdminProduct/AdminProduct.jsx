@@ -18,7 +18,9 @@ import DrawerComponent from "../Drawer/DrawerComponent";
 import { useSelector } from "react-redux";
 import ModalComponent from "../ModalComponent/ModalComponent";
 import Highlighter from "react-highlight-words";
-import { useDownloadExcel } from "react-export-table-to-excel";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 
 const AdminProduct = () => {
   const [isModalOpenDelete, setIsModalOpenDelete] = useState(false);
@@ -67,12 +69,8 @@ const AdminProduct = () => {
     selled: "",
     discount: "",
   });
-  const tableRef = useRef(null);
-  const { onDownload } = useDownloadExcel({
-    currentTableRef: tableRef.current,
-    filename: "Danh_sach_nguoi_dung",
-    sheet: "Users",
-  });
+  
+
   const renderAction = () => {
     return (
       <div>
@@ -489,7 +487,29 @@ const AdminProduct = () => {
   const handleCancelDelete = () => {
     setIsModalOpenDelete(false);
   };
-
+  const handleDownloadExcel = () => {
+    if (!products?.data) return;
+  
+    const dataExport = products.data.map((item) => ({
+      "Tên sản phẩm": item.name,
+      "Giá": item.price,
+      "Số sao": item.rating,
+      "Số lượng trong kho": item.countInStock,
+      "Đã bán": item.selled,
+      "Giảm giá": item.discount,
+      "Loại": item.type,
+    }));
+  
+    const ws = XLSX.utils.json_to_sheet(dataExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Danh sách sản phẩm");
+  
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "Danh_sach_san_pham.xlsx");
+  };
+  
+  
   const handleOkDelete = () => {
     mutationDelete.mutate(
       { id: rowSelected, token: user?.access_token },
@@ -546,7 +566,7 @@ const AdminProduct = () => {
       </div>
       <Button
         type="primary"
-        onClick={onDownload}
+        onClick={handleDownloadExcel}
         style={{ float: "right", marginRight: 20, marginBottom: 10 }}
       >
         Xuất Excel
@@ -554,6 +574,7 @@ const AdminProduct = () => {
 
       <div style={{ marginTop: "10px" }}>
         <TableComponent
+          rowSelection={null}
           columns={columns}
           data={
             isLoadingProduct

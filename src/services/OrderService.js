@@ -40,3 +40,24 @@ export const deleteOrder = async (id,access_token,data) => {
     })
     return res;
   }
+
+  export const getAllOrder = async (access_token) => {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/order/get-all-order`,{
+          headers: {
+            token: `Bearer ${access_token}`,
+          },
+          withCredentials: true,
+        }
+      );
+    return res.data;
+  };
+
+  export const updateOrderStatus = async (id,status) => {
+    const res = await axios.put(
+      `${process.env.REACT_APP_API_URL}/order/update-order-status/${id}`,{
+        status,
+      }
+    );
+  return res.data;
+};
