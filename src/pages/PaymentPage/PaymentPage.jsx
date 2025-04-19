@@ -1,12 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Form } from "antd";
 import { WrapperInfo, WrapperLeft, WrapperRight } from "./style";
 import ButtonComponent from "../../components/ButtonComponent/ButtonComponent";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  removeAllOrderProduct,
-  selectedOrder,
-} from "../../redux/slides/orderSlide";
 import { useNavigate } from "react-router-dom";
 import { useMessage } from "../../components/Message/MessageProvider";
 import InputComponent from "../../components/InputComponent/InputComponent";
@@ -16,28 +11,20 @@ import * as VoucherService from "../../services/VoucherService";
 import { useLocation } from "react-router-dom";
 
 const PaymentPage = () => {
-  const order = useSelector((state) => state.order);
   const user = useSelector((state) => state.user);
-  const [deliveryMethod, setDeliveryMethod] = useState("FAST");
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [voucherCode, setVoucherCode] = useState("");
   const [discountVoucher, setDiscountVoucher] = useState(0);
   const [voucherInfo, setVoucherInfo] = useState(null);
 
-  const [form] = Form.useForm();
-  const [stateUserDetails, setStateUserDetails] = useState({
-    name: "",
-    address: "",
-    phone: "",
-    city: "",
-  });
   const dispatch = useDispatch();
 
   const { state } = useLocation();
-  const listChecked = useMemo(() => {
-    return state?.orderItemSlected || [];
-  }, [state]);
-
+  const order = state.orderItemSlected;
+  const updatedOrder = order.map(({ id, ...rest }) => ({
+    ...rest,
+    product: id
+  }));
   const mutationAddOrder = useMutationHooks((data) => {
     const { token, ...rests } = data;
     const res = OrderService.createOrder({ ...rests }, token);
@@ -47,23 +34,14 @@ const PaymentPage = () => {
   const navigate = useNavigate();
   const { success, error } = useMessage();
 
-  useEffect(() => {
-    dispatch(selectedOrder({ listChecked }));
-  }, [listChecked, dispatch]);
-
-
-  useEffect(() => {
-    form.setFieldsValue(stateUserDetails);
-  }, [form, stateUserDetails]);
 
   const priceMemo = useMemo(() => {
-    return order?.orderItems?.reduce((total, item) => {
-      if (listChecked.includes(item.product)) {
-        return total + (item.price * item.amount * (100 - item.discount)) / 100;
-      }
-      return total;
+    if (!order || order.length === 0) return 0;
+    
+    return order.reduce((total, item) => {
+      return total + (item.price * item.amount * (1 - item.discount/100));
     }, 0);
-  }, [order?.orderItems, listChecked]);
+  }, [order]);
 
   const diliveryPriceMeno = useMemo(() => {
     if (priceMemo > 500000) {
@@ -78,10 +56,9 @@ const PaymentPage = () => {
     return priceMemo + diliveryPriceMeno;
   }, [priceMemo, diliveryPriceMeno]);
   const handleAddOrder = () => {
-    console.log('first',user,order?.orderItemSlected )
     if (
       user?.access_token &&
-      order?.orderItemSlected &&
+      order &&
       user?.name &&
       user?.address &&
       user?.phone &&
@@ -91,7 +68,7 @@ const PaymentPage = () => {
     ) {
       mutationAddOrder.mutate({
         token: user?.access_token,
-        orderItems: order?.orderItemSlected,
+        orderItems: updatedOrder,
         fullName: user?.name,
         address: user?.address,
         phone: user?.phone,
@@ -106,17 +83,14 @@ const PaymentPage = () => {
       });
     }
   };
-
+  console.log('order',order)
   const { isSuccess, data } = mutationAddOrder;
   useEffect(() => {
     console.log(data, isSuccess);
-
     if (data?.data?.status === "OK" && isSuccess) {
-      dispatch(removeAllOrderProduct({ listChecked }));
       success("Đặt hàng thành công");
       navigate("/my-order", {
         state: {
-          deliveryMethod,
           paymentMethod,
           orders: order?.orderItemSlected,
           total: totalMeno,
@@ -127,11 +101,9 @@ const PaymentPage = () => {
     }
   }, [
     data,
-    deliveryMethod,
     dispatch,
     error,
     isSuccess,
-    listChecked,
     navigate,
     order?.orderItemSlected,
     paymentMethod,
@@ -193,10 +165,9 @@ const PaymentPage = () => {
                 margin: "0 auto",
               }}
             >
-              {/* Chọn phương thức giao hàng */}
               <div style={{ marginBottom: "24px" }}>
                 <div style={{ fontWeight: "bold", marginBottom: "8px" }}>
-                  Chọn phương thức giao hàng
+                  Sản phẩm đã chọn ({order.length})
                 </div>
                 <div
                   style={{
@@ -204,34 +175,60 @@ const PaymentPage = () => {
                     border: "1px solid #cce0ff",
                     padding: "12px",
                     borderRadius: "8px",
+                    maxHeight: "300px",
+                    overflowY: "auto",
                   }}
                 >
-                  <div style={{ marginBottom: "8px" }}>
-                    <input
-                      type="radio"
-                      name="delivery"
-                      value="FAST"
-                      checked={deliveryMethod === "FAST"}
-                      onChange={() => setDeliveryMethod("FAST")}
-                    />
-                    <span style={{ fontWeight: "bold", marginLeft: 6 }}>
-                      FAST
-                    </span>{" "}
-                    Giao hàng tiết kiệm
-                  </div>
-                  <div>
-                    <input
-                      type="radio"
-                      name="delivery"
-                      value="GO_JEK"
-                      checked={deliveryMethod === "GO_JEK"}
-                      onChange={() => setDeliveryMethod("GO_JEK")}
-                    />
-                    <span style={{ fontWeight: "bold", marginLeft: 6 }}>
-                      GO_JEK
-                    </span>{" "}
-                    Giao hàng tiết kiệm
-                  </div>
+                  {order.map((item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "8px 0",
+                        borderBottom:
+                          index < order.length - 1
+                            ? "1px solid #e8e8e8"
+                            : "none",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            objectFit: "cover",
+                          }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{item.name}</div>
+                          <div style={{ fontSize: "12px", color: "#666" }}>
+                            Số lượng: {item.amount}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontWeight: "bold" }}>
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(
+                            (item.price * item.amount * (100 - item.discount)) /
+                              100
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -406,7 +403,9 @@ const PaymentPage = () => {
                           <span>Thời gian áp dụng:</span>{" "}
                           {new Date(voucherInfo.start_date).toLocaleDateString(
                             "vi-VN"
-                          )} đến {new Date(voucherInfo.end_date).toLocaleDateString(
+                          )}{" "}
+                          đến{" "}
+                          {new Date(voucherInfo.end_date).toLocaleDateString(
                             "vi-VN"
                           )}
                         </span>

@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from "react";
 import {
   WrapperContentProfile,
-  WrapperHeader,
   WrapperLabel,
   WrapperUploadFile,
 } from "./style";

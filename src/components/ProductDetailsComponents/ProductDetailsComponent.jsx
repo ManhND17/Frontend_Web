@@ -10,21 +10,20 @@ import {
   WrapperQualityProduct,
 } from "./style";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
-import { StarFilled, StarTwoTone, StarOutlined } from "@ant-design/icons";
+import { StarFilled, StarOutlined } from "@ant-design/icons";
 import ButtonComponent from "../ButtonComponent/ButtonComponent";
 import * as ProductService from "../../services/ProductService";
+import * as CartService from "../../services/CartService";
 import { useQuery } from "@tanstack/react-query";
 import { Loading } from "../LoadingComponent/Loading";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { addOrderProduct } from "../../redux/slides/orderSlide";
 import { useMessage } from "../../components/Message/MessageProvider";
 
 const ProductDetailsComponent = ({ idProduct }) => {
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
 
   const [quantity, setQuantity] = useState(1);
   const fetchGetDetailsProduct = async ({ queryKey }) => {
@@ -90,28 +89,27 @@ const ProductDetailsComponent = ({ idProduct }) => {
     retry: 3,
     retryDelay: 1000,
   });
-  const { success } = useMessage();
+  const { success,error} = useMessage();
   if (!productDetails) return null;
 
-  const handleAddOrderProduct = () => {
+  const handleAddOrderProduct = async() => {
     if (!user?.id) {
       navigate("/sign-in", { state: location?.pathname });
-    } else {
-      dispatch(
-        addOrderProduct({
-          orderItem: {
-            name: productDetails?.name,
-            amount: quantity,
-            discount: productDetails?.discount,
-            image: productDetails?.image,
-            price: productDetails?.price,
-            product: productDetails?._id,
-          },
-        })
-      );
-      if (true) {
-        success("Đã thêm vào giỏ hàng!");
+      return
+    }
+    try{
+      const data = await CartService.addCart({
+        user: user?.id,
+        product: productDetails?._id,
+        amount: quantity,
+      })
+      if(data.status === "OK"){
+        navigate('/cart')
+        success('Đã thêm vào giỏ hàng thành công')
       }
+    }catch (e){
+      error('Lỗi khi thêm vào giỏ hàng',e)
+      
     }
   };
 
@@ -324,25 +322,9 @@ const ProductDetailsComponent = ({ idProduct }) => {
                   background: "#ff7875",
                 },
               }}
-              onClick={() => {
-                if (!user?.id) {
-                  navigate("/sign-in");
-                } else {
-                  dispatch(
-                    addOrderProduct({
-                      orderItem: {
-                        name: productDetails?.name,
-                        amount: quantity,
-                        discount: productDetails?.discount,
-                        image: productDetails?.image,
-                        price: productDetails?.price,
-                        product: productDetails?._id,
-                      },
-                    })
-                  );
-                  navigate("/cart");
-                }
-              }}
+              onClick={handleAddOrderProduct}
+                
+  
               textButton={"Mua ngay"}
               styletextButton={{
                 color: "#fff",

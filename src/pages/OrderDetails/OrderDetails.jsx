@@ -153,41 +153,44 @@ const OrderSuccess = () => {
                     key={item.product}
                     style={{ marginBottom: "16px" }}
                   >
+                   <div
+                  style={{ display: "flex", gap: "16px", alignItems: "center" }}
+                >
+                  <img
+                    src={item.image}
+                    alt="product"
+                    style={{
+                      width: "90px",
+                      height: "90px",
+                      objectFit: "cover",
+                      borderRadius: "10px",
+                      border: "1px solid #ddd",
+                    }}
+                  />
+                  <div style={{ flex: 1 }}>
                     <div
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
+                        fontWeight: 600,
+                        fontSize: "16px",
+                        marginBottom: "6px",
                       }}
                     >
-                      <img
-                        src={item?.image}
-                        alt="product"
-                        style={{
-                          width: "80px",
-                          height: "80px",
-                          objectFit: "cover",
-                          borderRadius: "8px",
-                          border: "1px solid #eee",
-                        }}
-                      />
-                      <div>
-                        <div style={{ fontWeight: 500 }}>{item?.name}</div>
-                        <div>Số lượng: {item?.amount}</div>
-                        <div style={{ fontWeight: 500, marginTop: "4px" }}>
-                          Giá:{" "}
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(
-                            (item?.price *
-                              item?.amount *
-                              (100 - item?.discount)) /
-                              100
-                          )}
-                        </div>
-                      </div>
+                      {item.name}
                     </div>
+                    <div>Số lượng: {item.amount}</div>
+                    <div style={{ marginTop: "4px", fontWeight: 500 }}>
+                      Giá:{" "}
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(
+                        (item?.price * item?.amount * (100 - item?.discount)) /
+                          100
+                      )}
+                    </div>
+                    
+                  </div>
+                </div>
                   </WrapperItemOrder>
                 ))}
               </div>

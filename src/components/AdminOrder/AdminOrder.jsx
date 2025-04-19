@@ -1,15 +1,13 @@
 import React, { useRef, useState } from "react";
 import { WrapperHeader } from "./style";
-import { Button, Form, Space, Select, Table } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Select, Table } from "antd";
+// import { SearchOutlined } from "@ant-design/icons";
 import TableComponent from "../TableComponent/TableComponent";
-import InputComponent from "../InputComponent/InputComponent";
+// import InputComponent from "../InputComponent/InputComponent";
 import * as OrderService from "../../services/OrderService";
 import { useMessage } from "../../components/Message/MessageProvider";
 import { useQuery } from "@tanstack/react-query";
-import Highlighter from "react-highlight-words";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
+// import Highlighter from "react-highlight-words";
 import { useSelector } from "react-redux";
 
 const AdminProduct = () => {
@@ -49,73 +47,73 @@ const AdminProduct = () => {
     setSearchText("");
   };
 
-  const getColumnSearchProps = (dataIndex) => ({
-    filterDropdown: ({
-      setSelectedKeys,
-      selectedKeys,
-      confirm,
-      clearFilters,
-    }) => (
-      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
-        <InputComponent
-          ref={searchInput}
-          placeholder={`Search ${dataIndex}`}
-          value={selectedKeys[0]}
-          onChange={(e) =>
-            setSelectedKeys(e.target.value ? [e.target.value] : [])
-          }
-          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-          style={{ marginBottom: 8, display: "block" }}
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
-          </Button>
-          <Button
-            onClick={() => clearFilters && handleReset(clearFilters)}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Reset
-          </Button>
-        </Space>
-      </div>
-    ),
-    filterIcon: (filtered) => (
-      <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
-    ),
-    onFilter: (value, record) =>
-      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
-    filterDropdownProps: {
-      onOpenChange(open) {
-        if (open) {
-          setTimeout(() => {
-            var _a;
-            return (_a = searchInput.current) === null || _a === void 0
-              ? void 0
-              : _a.select();
-          }, 100);
-        }
-      },
-    },
-    render: (text) =>
-      searchedColumn === dataIndex ? (
-        <Highlighter
-          highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
-          searchWords={[searchText]}
-          autoEscape
-          textToHighlight={text ? text.toString() : ""}
-        />
-      ) : (
-        text
-      ),
-  });
+  // const getColumnSearchProps = (dataIndex) => ({
+  //   filterDropdown: ({
+  //     setSelectedKeys,
+  //     selectedKeys,
+  //     confirm,
+  //     clearFilters,
+  //   }) => (
+  //     <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+  //       <InputComponent
+  //         ref={searchInput}
+  //         placeholder={`Search ${dataIndex}`}
+  //         value={selectedKeys[0]}
+  //         onChange={(e) =>
+  //           setSelectedKeys(e.target.value ? [e.target.value] : [])
+  //         }
+  //         onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+  //         style={{ marginBottom: 8, display: "block" }}
+  //       />
+  //       <Space>
+  //         <Button
+  //           type="primary"
+  //           onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+  //           icon={<SearchOutlined />}
+  //           size="small"
+  //           style={{ width: 90 }}
+  //         >
+  //           Search
+  //         </Button>
+  //         <Button
+  //           onClick={() => clearFilters && handleReset(clearFilters)}
+  //           size="small"
+  //           style={{ width: 90 }}
+  //         >
+  //           Reset
+  //         </Button>
+  //       </Space>
+  //     </div>
+  //   ),
+  //   filterIcon: (filtered) => (
+  //     <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+  //   ),
+  //   onFilter: (value, record) =>
+  //     record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+  //   filterDropdownProps: {
+  //     onOpenChange(open) {
+  //       if (open) {
+  //         setTimeout(() => {
+  //           var _a;
+  //           return (_a = searchInput.current) === null || _a === void 0
+  //             ? void 0
+  //             : _a.select();
+  //         }, 100);
+  //       }
+  //     },
+  //   },
+  //   render: (text) =>
+  //     searchedColumn === dataIndex ? (
+  //       <Highlighter
+  //         highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
+  //         searchWords={[searchText]}
+  //         autoEscape
+  //         textToHighlight={text ? text.toString() : ""}
+  //       />
+  //     ) : (
+  //       text
+  //     ),
+  // });
   const {success,error} = useMessage()
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -189,7 +187,7 @@ const AdminProduct = () => {
         dataIndex: "image",
         key: "image",
         render: (img) => (
-          <img
+          <image
             src={img}
             style={{ width: 50, height: 50, objectFit: "cover" }}
           />

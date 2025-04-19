@@ -22,7 +22,6 @@ const GlobalStyle = createGlobalStyle`
 function App() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
-  const order = useSelector((state) => state.order);
 
   const handleGetDetailsUser = useCallback(
     async (id, token) => {

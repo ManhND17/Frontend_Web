@@ -41,6 +41,7 @@ const MyOrderPage = () => {
     "Đã xác nhận",
     "Đơn hàng đang chuẩn bị",
   ];
+  const reviewStatus = ["Giao đơn hàng thành công"];
   const { isError, isSuccess } = mutationDeleteOrder;
   useEffect(() => {
     if (isSuccess) {
@@ -176,15 +177,29 @@ const MyOrderPage = () => {
                     >
                       Xem chi tiết
                     </Button>
-                    <Button
-                      danger
-                      disabled={!cancellableStatuses.includes(order.status)}
-                      onClick={() => handelDeleteOrder(order._id, order)}
-                    >
-                      Hủy đơn hàng
-                    </Button>
+                    {reviewStatus.includes(order.status) &&
+                      <Button
+                        type="primary"
+                        onClick={() => {
+                          navigate("/review-product", {
+                            state: {
+                              order: order,
+                            },
+                          });
+                        }}
+                      >
+                        Đánh giá sản phẩm
+                      </Button>
+                    }
+                    {cancellableStatuses.includes(order.status) && (
+                      <Button
+                        danger
+                        onClick={() => handelDeleteOrder(order._id, order)}
+                      >
+                        Hủy đơn hàng
+                      </Button>
+                    )}
                   </div>
-
                   <hr style={{ marginTop: "24px", opacity: 0.2 }} />
                 </div>
               ))}

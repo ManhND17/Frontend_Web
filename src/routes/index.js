@@ -11,6 +11,7 @@ import ProfilePage from "../pages/Profile/ProfilePage"
 import PaymentPage from "../pages/PaymentPage/PaymentPage"
 import MyOrderPage from "../pages/MyOrderPage/MyOrderPage"
 import OrderDetail from '../pages/OrderDetails/OrderDetails'
+import Review from '../pages/ReveiwPage/Reveiw'
 
 export const routes = [
     {
@@ -40,6 +41,12 @@ export const routes = [
     {
         path: '/order-detail',
         page: OrderDetail,
+        isShowHeader: true,
+        isShowFotter: true
+    },
+    {
+        path: '/review-product',
+        page: Review,
         isShowHeader: true,
         isShowFotter: true
     },

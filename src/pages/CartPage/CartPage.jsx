@@ -12,12 +12,7 @@ import { PlusOutlined, MinusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { WrapperInputNumber } from "../../components/ProductDetailsComponents/style";
 import ButtonComponent from "../../components/ButtonComponent/ButtonComponent";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  decreaseAmount,
-  increaseAmount,
-  removeOrderProduct,
-  selectedOrder,
-} from "../../redux/slides/orderSlide";
+import { selectedOrder } from "../../redux/slides/orderSlide";
 import { useNavigate } from "react-router-dom";
 import { useMessage } from "../../components/Message/MessageProvider";
 import ModalComponent from "../../components/ModalComponent/ModalComponent";
@@ -26,11 +21,10 @@ import { useMutationHooks } from "../../hooks/useMutationHook";
 import * as UserService from "../../services/UserService";
 import { Loading } from "../../components/LoadingComponent/Loading";
 import { updateUser } from "../../redux/slides/UserSlide";
+import * as CartService from "../../services/CartService";
+import { useQuery } from "@tanstack/react-query";
 
 const CartPage = () => {
-  const order = useSelector((state) => state.order);
-  const user = useSelector((state) => state.user);
-  console.log('first',user)
   const [form] = Form.useForm();
   const [isOpenModal, setIsModalOpen] = useState(false);
   const [stateUserDetails, setStateUserDetails] = useState({
@@ -39,107 +33,130 @@ const CartPage = () => {
     phone: "",
     city: "",
   });
-
-  const mutationUpdate = useMutationHooks((data) => {
-    const { id, token, ...rests } = data;
-    const res = UserService.updateUser(id, rests, token);
-    return res;
-  });
-  const { isLoading = false } = mutationUpdate;
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { success, error } = useMessage();
+  const user = useSelector((state) => state.user);
 
+  const getAllCart = async () => {
+    const res = await CartService.getCartbyUserId(user?.id);
+    return res;
+  };
+
+  const { data: orderData, refetch } = useQuery({
+    queryKey: ["Cart"],
+    queryFn: getAllCart,
+    retry: 3,
+    retryDelay: 1000,
+  });
+
+  const orderItems = useMemo(() => orderData?.data?.data || [], [orderData]);
   const [listChecked, setListChecked] = useState([]);
-  const dispatch = useDispatch();
-  const onChange = (e) => {
-    if (listChecked.includes(e.target.value)) {
-      const newListChecked = listChecked.filter(
-        (item) => item !== e.target.value
-      );
-      setListChecked(newListChecked);
-    } else {
-      setListChecked([...listChecked, e.target.value]);
-    }
-  };
+  const mutationUpdate = useMutationHooks((data) => {
+    const { id, token, ...rest } = data;
+    return UserService.updateUser(id, rest, token);
+  });
 
-  const handleChangeCount = (type, idProduct) => {
+  const { isLoading = false } = mutationUpdate;
+
+  const onChange = (e, index) => {
+    const { checked } = e.target;
+    setListChecked((prev) => {
+      const updated = [...prev];
+      updated[index] = checked;
+      return updated;
+    });
+  };
+  useEffect(() => {
+    if (orderItems.length > 0) {
+      setListChecked(new Array(orderItems.length).fill(false));
+    }
+  }, [orderItems]);
+
+  const handleChangeCount = async (type, productId, currentAmount) => {
+    let newAmount = currentAmount;
     if (type === "increment") {
-      dispatch(increaseAmount(idProduct));
+      newAmount = currentAmount + 1;
+    } else if (type === "decrement" && currentAmount > 1) {
+      newAmount = currentAmount - 1;
     } else {
-      dispatch(decreaseAmount(idProduct));
+      return;
+    }
+
+    try {
+      await CartService.updateCartAmount(user?.id, productId, newAmount);
+      refetch();
+    } catch (err) {
+      console.error("Cập nhật số lượng thất bại:", err);
+      error("Không thể cập nhật số lượng sản phẩm. Vui lòng thử lại.");
     }
   };
 
-  const handleDeleteOrder = (idProduct) => {
-    dispatch(removeOrderProduct(idProduct));
+  const handleDeleteOrder = async (id) => {
+    await CartService.deleteCart(user?.id, id);
+    refetch();
   };
 
   useEffect(() => {
     dispatch(selectedOrder({ listChecked }));
-  }, [dispatch,listChecked]);
+  }, [dispatch, listChecked]);
 
   useEffect(() => {
     if (isOpenModal) {
       setStateUserDetails({
-        ...stateUserDetails,
-        city: user?.city,
-        name: user?.name,
-        phone: user?.phone,
-        address: user?.address,
+        name: user?.name || "",
+        phone: user?.phone || "",
+        address: user?.address || "",
+        city: user?.city || "",
       });
     }
-  }, [isOpenModal, 
-    user?.address, 
-    user?.city, 
-    user?.name, 
-    user?.phone]);
+  }, [isOpenModal, user]);
 
-  const handleChangeAddress = () => {
-    setIsModalOpen(true);
-  };
   useEffect(() => {
     form.setFieldsValue(stateUserDetails);
   }, [form, stateUserDetails]);
 
   const priceMemo = useMemo(() => {
-    return order?.orderItems?.reduce((total, item) => {
-      if (listChecked.includes(item.product)) {
+    return orderItems.reduce((total, item, index) => {
+      if (listChecked[index]) {
         return total + (item.price * item.amount * (100 - item.discount)) / 100;
       }
       return total;
     }, 0);
-  }, [order?.orderItems, listChecked]);
+  }, [orderItems, listChecked]);
 
-  const priceDicount = useMemo(() => {
-    return order?.orderItems?.reduce((total, item) => {
-      if (listChecked.includes(item.product)) {
+  const priceDiscount = useMemo(() => {
+    return orderItems.reduce((total, item, index) => {
+      if (listChecked[index]) {
         return total + (item.price * item.amount * item.discount) / 100;
       }
       return total;
     }, 0);
-  }, [order?.orderItems, listChecked]);
+  }, [orderItems, listChecked]);
 
-  const diliveryPriceMeno = useMemo(() => {
-    if (priceMemo > 1000000) {
-      return 0;
-    } else if (priceMemo === 0) {
-      return 0;
-    } else {
-      return 30000;
-    }
+  const deliveryPriceMemo = useMemo(() => {
+    return priceMemo > 500000 || priceMemo === 0 ? 0 : 30_000;
   }, [priceMemo]);
 
   const handleAddCart = () => {
-    if (!order?.orderItemSlected?.length) {
-      error("Chọn sản phẩm trước khi thanh toán!");
-    } else if (!user?.phone || !user?.address || !user?.name) {
+    const hasSelectedProduct = listChecked.some(checked => checked);
+    
+    if (!hasSelectedProduct) {
+      error("Vui lòng chọn ít nhất một sản phẩm trước khi mua hàng!");
+      return;
+    }
+  
+    if (!user?.phone || !user?.address || !user?.name) {
       setIsModalOpen(true);
     } else {
-      navigate("/payment", {
-        state: { orderItemSlected: listChecked },
+      navigate("/payment", { 
+        state: { 
+          orderItemSlected: orderItems.filter((_, index) => listChecked[index]) 
+        } 
       });
     }
   };
+
   const handleOk = () => {
     const { name, address, city, phone } = stateUserDetails;
     if (name && address && city && phone) {
@@ -150,25 +167,18 @@ const CartPage = () => {
       });
       setIsModalOpen(false);
       success("Cập nhật thông tin thành công!");
-      
       dispatch(updateUser({ ...user, ...stateUserDetails }));
     }
   };
+
   const handleCancel = () => {
-    setStateUserDetails({
-      name: "",
-      address: "",
-      phone: "",
-      city: "",
-    });
     form.resetFields();
     setIsModalOpen(false);
   };
+
   const handleOnchangeDetails = (e) => {
-    setStateUserDetails({
-      ...stateUserDetails,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setStateUserDetails((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -179,15 +189,9 @@ const CartPage = () => {
           <WrapperLeft>
             <WrapperStyleHeader>
               <span style={{ display: "inline-block", width: "390px" }}>
-                <span>Tất cả ({order?.orderItems?.length} sản phẩm)</span>
+                Tất cả ({orderItems.length} sản phẩm)
               </span>
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
+              <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
                 <span style={{ width: "10%", textAlign: "center" }}>
                   Đơn giá
                 </span>
@@ -202,133 +206,31 @@ const CartPage = () => {
                 </span>
               </div>
             </WrapperStyleHeader>
-            <div>
-              {order?.orderItems?.map((item) => {
-                return (
-                  <WrapperItemOrder key={item.product}>
-                    <div
-                      style={{
-                        width: "390px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                      }}
-                    >
-                      <Checkbox
-                        onChange={onChange}
-                        value={item.product}
-                      ></Checkbox>
-                      <img
-                        src={item?.image}
-                        alt="product"
-                        style={{
-                          width: "77px",
-                          height: "79px",
-                          objectFit: "cover",
-                        }}
-                      />
-                      <div>{item?.name}</div>
-                    </div>
-                    <div
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span>
-                        <span
-                          style={{
-                            fontSize: "13px",
-                            color: "#242424",
-                            width: "25%",
-                            textAlign: "center",
-                          }}
-                        >
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(item?.price)}
-                        </span>
-                      </span>
-                      <WrapperCountOrder
-                        style={{ width: "18%", textAlign: "center" }}
-                      >
-                        <button
-                          style={{ border: "none", background: "transparent" }}
-                          onClick={() =>
-                            handleChangeCount("decrement", item.product)
-                          }
-                        >
-                          <MinusOutlined
-                            style={{ color: "#000", fontSize: "14px" }}
-                          />
-                        </button>
-                        <WrapperInputNumber
-                          onChange={onChange}
-                          defaultValue={1}
-                          value={item?.amount}
-                          size="small"
-                          controls={false}
-                        ></WrapperInputNumber>
-                        <button
-                          style={{ border: "none", background: "transparent" }}
-                          onClick={() =>
-                            handleChangeCount("increment", item.product)
-                          }
-                        >
-                          <PlusOutlined
-                            style={{ color: "#000", fontSize: "14px" }}
-                          />
-                        </button>
-                      </WrapperCountOrder>
-                      <span
-                        style={{
-                          fontSize: "13px",
-                          color: "#242424",
-                          width: "20%",
-                          textAlign: "center",
-                        }}
-                      >
-                        -{item?.discount}%
-                      </span>
-                      <span
-                        style={{
-                          color: "rgb(255,66,78",
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          width: "20%",
-                          textAlign: "center",
-                        }}
-                      >
-                        {new Intl.NumberFormat("vi-VN", {
-                          style: "currency",
-                          currency: "VND",
-                        }).format(
-                          (item?.price *
-                            item?.amount *
-                            (100 - item?.discount)) /
-                            100
-                        )}
-                      </span>
-                      <DeleteOutlined
-                        style={{ sursor: "pointer" }}
-                        onClick={() => {
-                          handleDeleteOrder(item?.product);
-                        }}
-                      />
-                    </div>
-                  </WrapperItemOrder>
-                );
-              })}
-            </div>
-          </WrapperLeft>
-          <WrapperRight>
-            <div style={{ width: "100%" }}>
-              <WrapperInfo>
+
+            {orderItems.map((item, index) => (
+              <WrapperItemOrder key={item.product}>
                 <div
                   style={{
+                    width: "390px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <Checkbox
+                    onChange={(e) => onChange(e, index)}
+                    value={item.product}
+                  />
+                  <img
+                    src={item.image}
+                    alt="product"
+                    style={{ width: 77, height: 79, objectFit: "cover" }}
+                  />
+                  <div>{item.name}</div>
+                </div>
+                <div
+                  style={{
+                    flex: 1,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -336,157 +238,240 @@ const CartPage = () => {
                 >
                   <span
                     style={{
-                      color: "rgb(36,36,36)",
-                      fontWeight: 400,
                       fontSize: "13px",
+                      color: "#242424",
+                      width: "25%",
+                      textAlign: "center",
                     }}
                   >
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(item.price)}
+                  </span>
+                  <WrapperCountOrder
+                    style={{ width: "18%", textAlign: "center" }}
+                  >
+                    <button
+                      onClick={() =>
+                        handleChangeCount("decrement", item.id, item.amount)
+                      }
+                      style={{ border: "none", background: "transparent" }}
+                    >
+                      <MinusOutlined
+                        style={{ color: "#000", fontSize: "14px" }}
+                      />
+                    </button>
+                    <WrapperInputNumber
+                      value={item.amount}
+                      size="small"
+                      controls={false}
+                    />
+                    <button
+                      onClick={() =>
+                        handleChangeCount("increment", item.id, item.amount)
+                      }
+                      style={{ border: "none", background: "transparent" }}
+                    >
+                      <PlusOutlined
+                        style={{ color: "#000", fontSize: "14px" }}
+                      />
+                    </button>
+                  </WrapperCountOrder>
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      color: "#242424",
+                      width: "20%",
+                      textAlign: "center",
+                    }}
+                  >
+                    -{item.discount}%
+                  </span>
+                  <span
+                    style={{
+                      color: "rgb(255,66,78)",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      width: "20%",
+                      textAlign: "center",
+                    }}
+                  >
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(
+                      (item.price * item.amount * (100 - item.discount)) / 100
+                    )}
+                  </span>
+                  <DeleteOutlined
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleDeleteOrder(item.id)}
+                  />
+                </div>
+              </WrapperItemOrder>
+            ))}
+          </WrapperLeft>
+
+          <WrapperRight>
+            <div style={{ width: "100%" }}>
+              <WrapperInfo
+                style={{
+                  padding: 16,
+                  borderRadius: 8,
+                  background: "#fff",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                  marginBottom: 20,
+                }}
+              >
+                <div
+                  className="flex-space-between"
+                  style={{
+                    marginBottom: 12,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span style={{ fontWeight: 500, color: "#555" }}>
                     Tạm tính
                   </span>
                   <span
                     style={{
-                      color: "#000",
-                      fontSize: "14px",
-                      fontWeight: "bold",
+                      fontWeight: 500,
+                      minWidth: 150, // Cố định chiều rộng tối thiểu
+                      textAlign: "right",
+                      fontFeatureSettings: '"tnum"', // Hiển thị số monospaced
                     }}
                   >
-                    {new Intl.NumberFormat("vi-VN", {
+                    {priceMemo.toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
-                    }).format(priceMemo)}
+                    })}
                   </span>
                 </div>
                 <div
+                  className="flex-space-between"
                   style={{
+                    marginBottom: 12,
                     display: "flex",
-                    alignItems: "center",
                     justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <span
-                    style={{
-                      color: "rgb(36,36,36)",
-                      fontWeight: 400,
-                      fontSize: "13px",
-                    }}
-                  >
+                  <span style={{ fontWeight: 500, color: "#555" }}>
                     Giảm giá
                   </span>
                   <span
                     style={{
-                      color: "#000",
-                      fontSize: "14px",
-                      fontWeight: "bold",
+                      fontWeight: 500,
+                      minWidth: 150,
+                      textAlign: "right",
+                      fontFeatureSettings: '"tnum"',
                     }}
                   >
-                    {new Intl.NumberFormat("vi-VN", {
+                    -
+                    {priceDiscount.toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
-                    }).format(priceDicount)}
+                    })}
                   </span>
                 </div>
                 <div
+                  className="flex-space-between"
                   style={{
+                    borderBottom: "1px solid #eee",
+                    paddingBottom: 12,
+                    marginBottom: 12,
                     display: "flex",
-                    alignItems: "center",
                     justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <span
-                    style={{
-                      color: "rgb(36,36,36)",
-                      fontWeight: 400,
-                      fontSize: "13px",
-                    }}
-                  >
+                  <span style={{ fontWeight: 500, color: "#555" }}>
                     Phí giao hàng
                   </span>
                   <span
                     style={{
-                      color: "#000",
-                      fontSize: "14px",
-                      fontWeight: "bold",
+                      fontWeight: 500,
+                      minWidth: 150,
+                      textAlign: "right",
+                      fontFeatureSettings: '"tnum"',
                     }}
                   >
-                    {new Intl.NumberFormat("vi-VN", {
+                    {deliveryPriceMemo.toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
-                    }).format(diliveryPriceMeno)}
+                    })}
                   </span>
                 </div>
-              </WrapperInfo>
-
-              <WrapperInfo>
                 <div
+                  className="flex-space-between"
                   style={{
                     display: "flex",
-                    alignItems: "center",
                     justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <span
-                    style={{
-                      color: "rgb(36,36,36)",
-                      fontWeight: 400,
-                      fontSize: "13px",
-                    }}
-                  >
+                  <span style={{ fontSize: 16, fontWeight: "bold" }}>
                     Tổng tiền
                   </span>
                   <span
                     style={{
-                      color: "rgb(236, 13, 13)",
-                      fontSize: "18px",
+                      color: "#ec0d0d",
+                      fontSize: 18,
                       fontWeight: "bold",
+                      minWidth: 150,
+                      textAlign: "right",
+                      fontFeatureSettings: '"tnum"',
                     }}
                   >
-                    {new Intl.NumberFormat("vi-VN", {
+                    {(priceMemo + deliveryPriceMemo).toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
-                    }).format(priceMemo + diliveryPriceMeno)}
+                    })}
                   </span>
                 </div>
               </WrapperInfo>
-              <WrapperInfo>
+
+              {/* Các phần còn lại giữ nguyên */}
+              <WrapperInfo style={{ marginBottom: 12 }}>
                 <div>
-                  <span>Địa chỉ: </span>
-                  <span style={{ fontWeight: "bold" }}>{user?.address}</span>
+                  Địa chỉ: <strong>{user?.address}</strong>
                 </div>
               </WrapperInfo>
-              <WrapperInfo>
+
+              <WrapperInfo style={{ marginBottom: 20 }}>
                 <span
-                  onClick={handleChangeAddress}
-                  style={{ color: "blue", cursor: "pointer" }}
+                  onClick={() => setIsModalOpen(true)}
+                  style={{
+                    color: "#1677ff",
+                    cursor: "pointer",
+                    fontWeight: 500,
+                  }}
                 >
                   Cập nhật thông tin giao hàng
                 </span>
               </WrapperInfo>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "10px",
-                }}
-              >
+
+              <div className="flex-center" style={{ margin: 10 }}>
                 <ButtonComponent
-                  onClick={() => {
-                    handleAddCart();
-                  }}
+                  onClick={handleAddCart}
                   size={40}
                   border={false}
                   styleButton={{
-                    background: "rgb(255,57,69)",
-                    height: "48px",
-                    width: "600px",
+                    background: "#ff3945",
+                    height: 48,
+                    width: "100%",
+                    maxWidth: 300,
                     border: "none",
-                    borderRadius: "4px",
+                    borderRadius: 8,
                   }}
-                  textButton={"Mua hàng"}
+                  textButton="Mua hàng"
                   styletextButton={{
                     color: "#fff",
-                    fontSize: "15px",
-                    fontWeight: "700",
+                    fontSize: 16,
+                    fontWeight: "bold",
                   }}
                 />
               </div>
@@ -494,6 +479,8 @@ const CartPage = () => {
           </WrapperRight>
         </div>
       </div>
+
+      {/* Modal cập nhật thông tin */}
       <ModalComponent
         title="Cập nhật thông tin giao hàng"
         open={isOpenModal}
@@ -501,38 +488,27 @@ const CartPage = () => {
         onOk={handleOk}
       >
         <Loading isLoading={isLoading}>
-          <Form
-            name="basic"
-            labelCol={{ span: 8 }}
-            wrapperCol={{ span: 16 }}
-            style={{ maxWidth: 600 }}
-            autoComplete="off"
-            form={form}
-          >
+          <Form form={form} layout="vertical">
             <Form.Item
               label="Tên khách hàng"
               name="name"
-              rules={[
-                { required: true, message: "Vui lòng nhập tên sản phẩm!" },
-              ]}
+              rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
             >
               <InputComponent
+                name="name"
                 value={stateUserDetails.name}
                 onChange={handleOnchangeDetails}
-                name="name"
               />
             </Form.Item>
             <Form.Item
               label="Số điện thoại"
               name="phone"
-              rules={[
-                { required: true, message: "Vui lòng nhập số điện thoại!" },
-              ]}
+              rules={[{ required: true, message: "Vui lòng nhập SĐT!" }]}
             >
               <InputComponent
+                name="phone"
                 value={stateUserDetails.phone}
                 onChange={handleOnchangeDetails}
-                name="phone"
               />
             </Form.Item>
             <Form.Item
@@ -541,9 +517,9 @@ const CartPage = () => {
               rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
             >
               <InputComponent
+                name="address"
                 value={stateUserDetails.address}
                 onChange={handleOnchangeDetails}
-                name="address"
               />
             </Form.Item>
             <Form.Item
@@ -552,15 +528,11 @@ const CartPage = () => {
               rules={[{ required: true, message: "Vui lòng nhập tỉnh!" }]}
             >
               <InputComponent
+                name="city"
                 value={stateUserDetails.city}
                 onChange={handleOnchangeDetails}
-                name="city"
               />
             </Form.Item>
-            <Form.Item
-              wrapperCol={{ span: 24 }}
-              style={{ textAlign: "right" }}
-            ></Form.Item>
           </Form>
         </Loading>
       </ModalComponent>
