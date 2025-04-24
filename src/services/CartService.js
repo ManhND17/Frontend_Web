@@ -29,16 +29,26 @@ export const deleteCart = async (user,product) => {
   return res;
 };
 
+export const deleteManyCart = async (user,product) => {
+  const res = await axiosJWT.delete(
+    `${process.env.REACT_APP_API_URL}/cart/delete-many-product-from-cart`,
+    {
+      data: {
+        userId: user,
+        productId: product,
+      },
+    }
+  );
+  return res;
+};
 export const updateCartAmount = async (user,product,amount) => {
   console.log('checkService',user,product,amount)
   const res = await axios.put(
     `${process.env.REACT_APP_API_URL}/cart/update-product-amount`,
     {
-      data:{
       userId: user,
       productId: product,
       amount: amount,
-      }
     }
   );
   return res.data;

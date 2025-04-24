@@ -9,9 +9,11 @@ import { useMutationHooks } from "../../hooks/useMutationHook";
 import * as OrderService from "../../services/OrderService";
 import * as VoucherService from "../../services/VoucherService";
 import { useLocation } from "react-router-dom";
+import * as CartService from "../../services/CartService";
 
 const PaymentPage = () => {
   const user = useSelector((state) => state.user);
+  const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [voucherCode, setVoucherCode] = useState("");
   const [discountVoucher, setDiscountVoucher] = useState(0);
@@ -23,7 +25,7 @@ const PaymentPage = () => {
   const order = state.orderItemSlected;
   const updatedOrder = order.map(({ id, ...rest }) => ({
     ...rest,
-    product: id
+    product: id,
   }));
   const mutationAddOrder = useMutationHooks((data) => {
     const { token, ...rests } = data;
@@ -34,12 +36,11 @@ const PaymentPage = () => {
   const navigate = useNavigate();
   const { success, error } = useMessage();
 
-
   const priceMemo = useMemo(() => {
     if (!order || order.length === 0) return 0;
-    
+
     return order.reduce((total, item) => {
-      return total + (item.price * item.amount * (1 - item.discount/100));
+      return total + item.price * item.amount * (1 - item.discount / 100);
     }, 0);
   }, [order]);
 
@@ -55,6 +56,7 @@ const PaymentPage = () => {
   const totalMeno = useMemo(() => {
     return priceMemo + diliveryPriceMeno;
   }, [priceMemo, diliveryPriceMeno]);
+
   const handleAddOrder = () => {
     if (
       user?.access_token &&
@@ -66,6 +68,7 @@ const PaymentPage = () => {
       priceMemo &&
       user?.id
     ) {
+      
       mutationAddOrder.mutate({
         token: user?.access_token,
         orderItems: updatedOrder,
@@ -80,23 +83,28 @@ const PaymentPage = () => {
         user: user?.id,
         VoucherCode: voucherCode,
         VoucherDiscount: discountVoucher,
+      },{onSuccess: async()=>{
+        setLoading(true);
+        const productId = order.map(item => item.id);
+        await CartService.deleteManyCart(user?.id,productId)
+        await CartService.getCartbyUserId(user?.id)
+      }
+        
       });
     }
   };
-  console.log('order',order)
   const { isSuccess, data } = mutationAddOrder;
   useEffect(() => {
     console.log(data, isSuccess);
+    
     if (data?.data?.status === "OK" && isSuccess) {
+      
       success("Đặt hàng thành công");
-      navigate("/my-order", {
-        state: {
-          paymentMethod,
-          orders: order?.orderItemSlected,
-          total: totalMeno,
-        },
-      });
+      navigate("/my-order");
+      window.window.location.reload();
+      setLoading(false); 
     } else if (isSuccess) {
+      setLoading(false); 
       error(data?.data?.message);
     }
   }, [

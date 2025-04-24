@@ -14,6 +14,7 @@ import { StarFilled, StarOutlined } from "@ant-design/icons";
 import ButtonComponent from "../ButtonComponent/ButtonComponent";
 import * as ProductService from "../../services/ProductService";
 import * as CartService from "../../services/CartService";
+import * as Review from "../../services/ReviewService";
 import { useQuery } from "@tanstack/react-query";
 import { Loading } from "../LoadingComponent/Loading";
 import { useSelector } from "react-redux";
@@ -48,40 +49,69 @@ const ProductDetailsComponent = ({ idProduct }) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const decimalPart = rating % 1;
-  
+
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <StarFilled key={`full-${i}`} style={{ fontSize: "20px", color: "rgb(253,216,54)" }} />
+        <StarFilled
+          key={`full-${i}`}
+          style={{ fontSize: "20px", color: "rgb(253,216,54)" }}
+        />
       );
     }
-  
+
     if (decimalPart > 0) {
       const percentage = Math.round(decimalPart * 100);
       stars.push(
-        <div key="half" style={{ position: "relative", display: "inline-block" }}>
-          <StarOutlined style={{ fontSize: "20px", color: "rgb(253,216,54)", position: "relative" }} />
-          <div style={{
-            position: "absolute",
-            overflow: "hidden",
-            width: `${percentage}%`,
-            top: 0,
-            left: 0
-          }}>
-            <StarFilled style={{ fontSize: "20px", color: "rgb(253,216,54)" }} />
+        <div
+          key="half"
+          style={{ position: "relative", display: "inline-block" }}
+        >
+          <StarOutlined
+            style={{
+              fontSize: "20px",
+              color: "rgb(253,216,54)",
+              position: "relative",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              overflow: "hidden",
+              width: `${percentage}%`,
+              top: 0,
+              left: 0,
+            }}
+          >
+            <StarFilled
+              style={{ fontSize: "20px", color: "rgb(253,216,54)" }}
+            />
           </div>
         </div>
       );
     }
-  
+
     const emptyStars = 5 - stars.length;
     for (let i = 0; i < emptyStars; i++) {
       stars.push(
-        <StarOutlined key={`empty-${i}`} style={{ fontSize: "20px", color: "rgb(253,216,54)" }} />
+        <StarOutlined
+          key={`empty-${i}`}
+          style={{ fontSize: "20px", color: "rgb(253,216,54)" }}
+        />
       );
     }
-  
+
     return stars;
   };
+  const fetchReviews = async ({ queryKey }) => {
+    const [, id] = queryKey;
+    const res = await Review.getReview(id);
+    return res.data;
+  };
+  const { data: reviews, isLoading: loadingReviews } = useQuery({
+    queryKey: ["product-reviews", idProduct],
+    queryFn: fetchReviews,
+    enabled: !!idProduct,
+  });
 
   const { isLoading, data: productDetails } = useQuery({
     queryKey: ["products-details", idProduct],
@@ -89,27 +119,26 @@ const ProductDetailsComponent = ({ idProduct }) => {
     retry: 3,
     retryDelay: 1000,
   });
-  const { success,error} = useMessage();
+  const { success, error } = useMessage();
   if (!productDetails) return null;
 
-  const handleAddOrderProduct = async() => {
+  const handleAddOrderProduct = async () => {
     if (!user?.id) {
       navigate("/sign-in", { state: location?.pathname });
-      return
+      return;
     }
-    try{
+    try {
       const data = await CartService.addCart({
         user: user?.id,
         product: productDetails?._id,
         amount: quantity,
-      })
-      if(data.status === "OK"){
-        navigate('/cart')
-        success('Đã thêm vào giỏ hàng thành công')
+      });
+      if (data.status === "OK") {
+        navigate("/cart");
+        success("Đã thêm vào giỏ hàng thành công");
       }
-    }catch (e){
-      error('Lỗi khi thêm vào giỏ hàng',e)
-      
+    } catch (e) {
+      error("Lỗi khi thêm vào giỏ hàng", e);
     }
   };
 
@@ -123,7 +152,6 @@ const ProductDetailsComponent = ({ idProduct }) => {
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
           margin: "0 auto",
           maxWidth: "1200px",
-          
         }}
       >
         {/* Phần hình ảnh */}
@@ -155,10 +183,7 @@ const ProductDetailsComponent = ({ idProduct }) => {
               gap: "8px",
               justifyContent: "space-between",
             }}
-          >
-           
-            
-          </Row>
+          ></Row>
         </Col>
 
         {/* Phần thông tin */}
@@ -239,7 +264,7 @@ const ProductDetailsComponent = ({ idProduct }) => {
             </span>
           </WrapperAdress>
 
-          <div style={{ padding: "16px 0"}}>
+          <div style={{ padding: "16px 0" }}>
             <div style={{ marginBottom: "12px", fontWeight: 500 }}>
               Số lượng
             </div>
@@ -323,8 +348,6 @@ const ProductDetailsComponent = ({ idProduct }) => {
                 },
               }}
               onClick={handleAddOrderProduct}
-                
-  
               textButton={"Mua ngay"}
               styletextButton={{
                 color: "#fff",
@@ -358,6 +381,72 @@ const ProductDetailsComponent = ({ idProduct }) => {
           </div>
         </Col>
       </Row>
+      <Divider orientation="left" style={{ marginTop: "32px" }}>
+        Đánh giá sản phẩm
+      </Divider>
+
+      {loadingReviews ? (
+        <div>Đang tải đánh giá...</div>
+      ) : reviews?.length > 0 ? (
+        reviews.map((review, index) => (
+          <div
+            key={index}
+            style={{
+              marginBottom: "24px",
+              padding: "16px",
+              background: "#fafafa",
+              borderRadius: "8px",
+              border: "1px solid #f0f0f0",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+            }}
+          >
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: "16px",
+                color: "#333",
+                marginBottom: "4px",
+              }}
+            >
+              {review.user}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                marginBottom: "8px",
+              }}
+            >
+              {renderStars(review.rating)}
+              <span
+                style={{
+                  marginLeft: "4px",
+                  fontWeight: 500,
+                  color: "#fa8c16",
+                }}
+              >
+                {review.rating}/5
+              </span>
+            </div>
+
+            <div
+              style={{ marginBottom: "8px", fontSize: "15px", color: "#444" }}
+            >
+              {review.comment}
+            </div>
+
+            <div style={{ fontSize: "12px", color: "#999" }}>
+              {new Date(review.createdAt).toLocaleString("vi-VN")}
+            </div>
+          </div>
+        ))
+      ) : (
+        <div style={{ color: "#888", padding: "12px 0" }}>
+          Chưa có đánh giá nào cho sản phẩm này.
+        </div>
+      )}
     </Loading>
   );
 };

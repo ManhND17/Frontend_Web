@@ -9,10 +9,15 @@ export const axiosJWT = axios.create();
 // };
 
 
-export const createVoucher = async (data) => {
+export const createVoucher = async (data,access_token) => {
   const res = await axios.post(
     `${process.env.REACT_APP_API_URL}/voucher/create`,
-    data
+    data,{
+      headers: {
+        token: `Bearer ${access_token}`,
+      },
+      withCredentials: true,
+    }
   );
   return res.data;
 };
@@ -24,7 +29,7 @@ export const getDetailVoucher = async (id) => {
   return res.data;
 };
 
-export const updateVoucher = async (id, access_token, data) => {
+export const updateVoucher = async (id, data,access_token) => {
   const res = await axiosJWT.put(
     `${process.env.REACT_APP_API_URL}/voucher/update/${id}`,
     data,
@@ -55,6 +60,18 @@ export const deleteVoucher = async (id, access_token) => {
 export const checkVoucher = async (id) => {
   const res = await axios.get(
     `${process.env.REACT_APP_API_URL}/voucher/check/${id}`
+  );
+  return res.data;
+};
+
+export const getAllVoucher = async (access_token) => {
+  const res = await axios.get(
+    `${process.env.REACT_APP_API_URL}/voucher/all-voucher`,
+    {
+      headers: {
+        token: `Bearer ${access_token}`,
+      },
+    }
   );
   return res.data;
 };

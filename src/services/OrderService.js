@@ -41,9 +41,9 @@ export const deleteOrder = async (id,access_token,data) => {
     return res;
   }
 
-  export const getAllOrder = async (access_token) => {
+  export const getAllOrder = async (limit,page,access_token) => {
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/order/get-all-order`,{
+        `${process.env.REACT_APP_API_URL}/order/get-all-order?limit=${limit}&page=${page}`,{
           headers: {
             token: `Bearer ${access_token}`,
           },
@@ -53,10 +53,11 @@ export const deleteOrder = async (id,access_token,data) => {
     return res.data;
   };
 
-  export const updateOrderStatus = async (id,status) => {
+  export const updateOrderStatus = async (id,status,access_token) => {
     const res = await axios.put(
-      `${process.env.REACT_APP_API_URL}/order/update-order-status/${id}`,{
-        status,
+      `${process.env.REACT_APP_API_URL}/order/update-order-status/${id}`,
+      {
+        status
       }
     );
   return res.data;

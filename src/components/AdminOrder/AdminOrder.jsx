@@ -1,13 +1,13 @@
 import React, { useRef, useState } from "react";
 import { WrapperHeader } from "./style";
-import { Select, Table } from "antd";
-// import { SearchOutlined } from "@ant-design/icons";
+import { Button, Image, Select, Space, Table } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import TableComponent from "../TableComponent/TableComponent";
-// import InputComponent from "../InputComponent/InputComponent";
+import InputComponent from "../InputComponent/InputComponent";
 import * as OrderService from "../../services/OrderService";
 import { useMessage } from "../../components/Message/MessageProvider";
 import { useQuery } from "@tanstack/react-query";
-// import Highlighter from "react-highlight-words";
+import Highlighter from "react-highlight-words";
 import { useSelector } from "react-redux";
 
 const AdminProduct = () => {
@@ -47,80 +47,80 @@ const AdminProduct = () => {
     setSearchText("");
   };
 
-  // const getColumnSearchProps = (dataIndex) => ({
-  //   filterDropdown: ({
-  //     setSelectedKeys,
-  //     selectedKeys,
-  //     confirm,
-  //     clearFilters,
-  //   }) => (
-  //     <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
-  //       <InputComponent
-  //         ref={searchInput}
-  //         placeholder={`Search ${dataIndex}`}
-  //         value={selectedKeys[0]}
-  //         onChange={(e) =>
-  //           setSelectedKeys(e.target.value ? [e.target.value] : [])
-  //         }
-  //         onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-  //         style={{ marginBottom: 8, display: "block" }}
-  //       />
-  //       <Space>
-  //         <Button
-  //           type="primary"
-  //           onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-  //           icon={<SearchOutlined />}
-  //           size="small"
-  //           style={{ width: 90 }}
-  //         >
-  //           Search
-  //         </Button>
-  //         <Button
-  //           onClick={() => clearFilters && handleReset(clearFilters)}
-  //           size="small"
-  //           style={{ width: 90 }}
-  //         >
-  //           Reset
-  //         </Button>
-  //       </Space>
-  //     </div>
-  //   ),
-  //   filterIcon: (filtered) => (
-  //     <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
-  //   ),
-  //   onFilter: (value, record) =>
-  //     record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
-  //   filterDropdownProps: {
-  //     onOpenChange(open) {
-  //       if (open) {
-  //         setTimeout(() => {
-  //           var _a;
-  //           return (_a = searchInput.current) === null || _a === void 0
-  //             ? void 0
-  //             : _a.select();
-  //         }, 100);
-  //       }
-  //     },
-  //   },
-  //   render: (text) =>
-  //     searchedColumn === dataIndex ? (
-  //       <Highlighter
-  //         highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
-  //         searchWords={[searchText]}
-  //         autoEscape
-  //         textToHighlight={text ? text.toString() : ""}
-  //       />
-  //     ) : (
-  //       text
-  //     ),
-  // });
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+    }) => (
+      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+        <InputComponent
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{ marginBottom: 8, display: "block" }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Reset
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    filterDropdownProps: {
+      onOpenChange(open) {
+        if (open) {
+          setTimeout(() => {
+            var _a;
+            return (_a = searchInput.current) === null || _a === void 0
+              ? void 0
+              : _a.select();
+          }, 100);
+        }
+      },
+    },
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ""}
+        />
+      ) : (
+        text
+      ),
+  });
   const {success,error} = useMessage()
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       const res = await OrderService.updateOrderStatus(
         orderId, 
-        { status: newStatus },
+        newStatus ,
         user?.access_token
       );
       
@@ -140,6 +140,7 @@ const AdminProduct = () => {
       title: "Mã đơn hàng",
       dataIndex: "_id",
       key: "_id",
+      ...getColumnSearchProps("_id"),
     },
     {
       title: "Khách hàng",
@@ -159,6 +160,7 @@ const AdminProduct = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      ...getColumnSearchProps("status"),
       render: (status, record) => (
         <Select
           value={status} 
@@ -172,12 +174,23 @@ const AdminProduct = () => {
       ),
     }
   ];
-  const { data: orders, isLoading: isLoadingOrder,  refetch  } = useQuery({
-    queryKey: ["Order"],
-    queryFn: () => getAllOrder(),
+
+  const getAllOrder = async (limit,page) => {
+    const res = await OrderService.getAllOrder(limit,page,user?.access_token,);
+    if (res.status === "OK") {
+      setTotal(res.totalPage*limit);
+    }
+    return res.data;
+  };
+
+  const { data: orders, isLoading: isLoadingOrder, refetch } = useQuery({
+    queryKey: ["Order", page, limit],
+    queryFn: () => getAllOrder(limit, page),
+    keepPreviousData: true,
     retry: 3,
     retryDelay: 1000,
   });
+  
 
   const expandedRowRender = (record) => {
     const columns = [
@@ -187,7 +200,7 @@ const AdminProduct = () => {
         dataIndex: "image",
         key: "image",
         render: (img) => (
-          <image
+          <Image
             src={img}
             style={{ width: 50, height: 50, objectFit: "cover" }}
           />
@@ -223,31 +236,9 @@ const AdminProduct = () => {
       />
     );
   };
-
-
-  const getAllOrder = async () => {
-    const res = await OrderService.getAllOrder(user?.access_token);
-    if (res.status === "OK") {
-      setTotal(res.total);
-    }
-
-    return res;
-  };
-
-  
-
-
   return (
     <div>
       <WrapperHeader>Quản lý đơn hàng</WrapperHeader>
-      {/* <Button
-        type="primary"
-        // onClick={handleDownloadExcel}
-        style={{ float: "right", marginRight: 20, marginBottom: 10 }}
-      >
-        Xuất Excel
-      </Button> */}
-
       <div style={{ marginTop: "10px" }}>
         <TableComponent
           rowSelection={null}
@@ -259,7 +250,7 @@ const AdminProduct = () => {
           data={
             isLoadingOrder
               ? []
-              : orders?.data?.map((order) => ({
+              : orders?.map((order) => ({
                   ...order,
                   key: order._id,
                 })) || []
@@ -270,7 +261,7 @@ const AdminProduct = () => {
             pageSize: limit,
             total: total,
             onChange: (page, pageSize) => {
-              setPage(page - 1);
+              setPage(page-1);
               setLimit(pageSize);
             },
           }}

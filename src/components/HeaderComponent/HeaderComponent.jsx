@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Badge, Col, Popover } from "antd";
 import {
   WrapperContentPopup,
@@ -20,6 +20,9 @@ import { useDispatch } from "react-redux";
 import { Spin } from "antd";
 import { useMessage } from "../Message/MessageProvider";
 import { searchProduct } from "../../redux/slides/productSlide";
+import * as CartService from "../../services/CartService";
+import { useQuery } from "@tanstack/react-query";
+
 
 const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
   const navigate = useNavigate();
@@ -27,9 +30,23 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
-  const order = useSelector((state)=>state.order)
-  const user = useSelector((state) => state.user);
+  
+  const getAllCart = async () => {
+      const res = await CartService.getCartbyUserId(user?.id);
+      return res;
+    };
 
+  const { data: orderData, refetch } = useQuery({
+    queryKey: ["Cart"],
+    queryFn: getAllCart,
+    retry: 3,
+    retryDelay: 1000,
+  });
+
+  const orderItems = useMemo(() => orderData?.data?.data || [], [orderData]);
+
+  const user = useSelector((state) => state.user);
+  
   const { success } = useMessage();
   const handleNavigateLogin = () => {
     navigate("/sign-in");
@@ -201,7 +218,7 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
 
             {!isHiddenSearch && (
               <div>
-                <Badge count={order?.orderItems?.length} size="small">
+                <Badge count={orderItems.length} size="small">
                   <ShoppingCartOutlined
                     style={{
                       fontSize: "30px",

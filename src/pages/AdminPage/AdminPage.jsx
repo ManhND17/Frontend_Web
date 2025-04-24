@@ -5,17 +5,21 @@ import {
   UserOutlined,
   AppstoreOutlined,
   OrderedListOutlined,
+  GiftOutlined,
 } from "@ant-design/icons";
 import HeaderComponent from "../../components/HeaderComponent/HeaderComponent";
 import AdminUser from "../../components/AdminUser/AdminUser";
 import AdminProduct from "../../components/AdminProduct/AdminProduct";
 import AdminOrder from "../../components/AdminOrder/AdminOrder";
+import AdminVoucher from "../../components/AdminVoucher/AdminVoucher";
+
 
 const AdminPage = () => {
   const items = [
     getItem("Người dùng", "user", <UserOutlined />),
     getItem("Sản phẩm", "product", <AppstoreOutlined />),
     getItem("Đơn hàng", "order", <OrderedListOutlined />),
+    getItem("Voucher", "voucher",<GiftOutlined/>),
   ];
 
   const [selectedKey, setSelectedKey] = useState("user"); 
@@ -38,6 +42,8 @@ const AdminPage = () => {
         return <AdminProduct />;
       case "order":
         return <AdminOrder />;
+      case "voucher":
+        return <AdminVoucher />;
       default:
         return <></>;
     }
