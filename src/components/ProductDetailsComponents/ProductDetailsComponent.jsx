@@ -15,6 +15,7 @@ import ButtonComponent from "../ButtonComponent/ButtonComponent";
 import * as ProductService from "../../services/ProductService";
 import * as CartService from "../../services/CartService";
 import * as Review from "../../services/ReviewService";
+import * as UserService from "../../services/UserService";
 import { useQuery } from "@tanstack/react-query";
 import { Loading } from "../LoadingComponent/Loading";
 import { useSelector } from "react-redux";
@@ -105,8 +106,23 @@ const ProductDetailsComponent = ({ idProduct }) => {
   const fetchReviews = async ({ queryKey }) => {
     const [, id] = queryKey;
     const res = await Review.getReview(id);
-    return res.data;
+    const reviews = res.data;
+
+    const enrichedReviews = await Promise.all(
+      reviews.map(async (review) => {
+        try {
+          const userInfo = await UserService.getNameAvatar(review.user);
+          return { ...review, userInfo: userInfo.data };
+        } catch (err) {
+          console.error("Lỗi lấy thông tin user:", err);
+          return review;
+        }
+      })
+    );
+
+    return enrichedReviews;
   };
+
   const { data: reviews, isLoading: loadingReviews } = useQuery({
     queryKey: ["product-reviews", idProduct],
     queryFn: fetchReviews,
@@ -406,9 +422,19 @@ const ProductDetailsComponent = ({ idProduct }) => {
                 fontSize: "16px",
                 color: "#333",
                 marginBottom: "4px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
               }}
             >
-              {review.user}
+              {review.userInfo?.avatar && (
+                <img
+                  src={review.userInfo.avatar}
+                  alt="avatar"
+                  style={{ width: "32px", height: "32px", borderRadius: "50%" }}
+                />
+              )}
+              {review.userInfo?.name || "Người dùng"}
             </div>
 
             <div

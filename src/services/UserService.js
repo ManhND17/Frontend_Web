@@ -30,6 +30,13 @@ export const getDetailUser = async (id, access_token) => {
   return res.data;
 };
 
+export const getNameAvatar = async (id) => {
+  const res = await axios.get(
+    `${process.env.REACT_APP_API_URL}/user/get-name-avatar/${id}`,
+  );
+  return res.data;
+};
+
 export const getAllUser = async (access_token) => {
   const res = await axios.get(
     `${process.env.REACT_APP_API_URL}/user/getAll`,
