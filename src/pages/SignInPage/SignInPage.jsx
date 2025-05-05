@@ -32,8 +32,10 @@ const SignInPage = () => {
 
   const handleGetDetailsUser = useCallback(
     async (id, token) => {
+      const storage = localStorage.getItem('refresh_token')
+      const refreshToken = JSON.parse(storage)
       const res = await UserService.getDetailUser(id, token);
-      dispatch(updateUser({ ...res?.data, access_token: token }));
+      dispatch(updateUser({ ...res?.data, access_token: token, refreshToken}));
     },
     [dispatch]
   );
@@ -41,7 +43,9 @@ const SignInPage = () => {
   useEffect(() => {
     if (isSuccess && data && data?.status !== "ERR") {
       success("Đăng nhập thành công!");
+      console.log('first',data)
       localStorage.setItem("access_token", JSON.stringify(data?.access_token));
+      localStorage.setItem("refresh_token", JSON.stringify(data?.refresh_token));
       if (data?.access_token) {
         const decoded = jwtDecode(data?.access_token);
         if (decoded?.id) {

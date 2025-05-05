@@ -11,6 +11,7 @@ const initialState = {
   isAdmin: false,
   isLoading: false,
   city: '',
+  refreshToken:'',
 }
 
 export const userSlide = createSlice({
@@ -18,7 +19,6 @@ export const userSlide = createSlice({
   initialState,
   reducers: {
     updateUser: (state, action) => {
-      // Giữ nguyên các giá trị hiện tại nếu payload không cung cấp
       const { 
         name = state.name, 
         email = state.email,
@@ -28,22 +28,23 @@ export const userSlide = createSlice({
         avatar = state.avatar,
         access_token = state.access_token,
         isAdmin = state.isAdmin,
-        city = state.city
+        city = state.city,
+        refreshToken = state.refreshToken
       } = action.payload;
       
       // Cập nhật state
       state.name = name;
       state.email = email;
-      state.id = _id; // Sử dụng cả _id và id để tương thích
+      state.id = _id; 
       state.phone = phone;
       state.address = address;
       state.avatar = avatar;
       state.access_token = access_token;
       state.isAdmin = isAdmin;
       state.city = city;
+      state.refreshToken = refreshToken
     },
     resetUser: (state) => {
-      // Giữ nguyên isLoading nếu cần
       return { ...initialState, isLoading: state.isLoading };
     },
     logout: () => {
@@ -52,7 +53,6 @@ export const userSlide = createSlice({
   }
 })
 
-// Action creators
 export const { updateUser, resetUser, logout } = userSlide.actions;
 
 export default userSlide.reducer;

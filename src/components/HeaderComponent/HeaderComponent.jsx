@@ -22,11 +22,13 @@ import { useMessage } from "../Message/MessageProvider";
 import { searchProduct } from "../../redux/slides/productSlide";
 import * as CartService from "../../services/CartService";
 import { useQuery } from "@tanstack/react-query";
+import { updateUser } from "../../redux/slides/UserSlide";
 
 
 const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
@@ -43,10 +45,20 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
     retryDelay: 1000,
   });
 
+  
+  
   const orderItems = useMemo(() => orderData?.data?.data || [], [orderData]);
 
   const user = useSelector((state) => state.user);
   
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser && !user?.id) {
+      dispatch(updateUser(storedUser));
+    }
+  }, []);
+  console.log('first',user)
   const { success } = useMessage();
   const handleNavigateLogin = () => {
     navigate("/sign-in");

@@ -170,6 +170,7 @@ const AdminProduct = () => {
       dataIndex: "name",
       key: "name",
       sorter: (a, b) => a.name.length - b.name.length,
+      
       ...getColumnSearchProps("name"),
     },
     {
@@ -195,6 +196,7 @@ const AdminProduct = () => {
       title: "Số sao",
       dataIndex: "rating",
       key: "rating",
+      render: (price) => Math.round(price*10)/10,
       sorter: (a, b) => a.rating - b.rating,
     },
     { title: "Số lượng trong kho", dataIndex: "countInStock", key: "count" },

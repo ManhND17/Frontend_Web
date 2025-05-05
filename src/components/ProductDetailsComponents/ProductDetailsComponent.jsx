@@ -228,7 +228,7 @@ const ProductDetailsComponent = ({ idProduct }) => {
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
               {renderStars(productDetails?.rating)}
               <span style={{ color: "#1890ff", fontWeight: 500 }}>
-                {productDetails?.rating}
+                {Math.round(productDetails?.rating * 10) / 10}
               </span>
             </div>
             <Divider type="vertical" style={{ height: "16px", margin: 0 }} />

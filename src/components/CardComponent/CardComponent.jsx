@@ -33,7 +33,7 @@ const CardComponent = (props) => {
         <StyleNameProduct>{name}</StyleNameProduct>
         <WarpperReportText>
           <span style={{ marginRight: "4px" }}>
-            <span>{rating}</span>{" "}
+            <span>{Math.round(rating * 10) / 10}</span>{" "}
             <StarFilled style={{ fontSize: "10px", color: "yellow" }} />
           </span>
           <span> | Đã bán {selled||100}</span>

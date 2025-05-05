@@ -10,8 +10,10 @@ import * as OrderService from "../../services/OrderService";
 import * as VoucherService from "../../services/VoucherService";
 import { useLocation } from "react-router-dom";
 import * as CartService from "../../services/CartService";
+import { useQueryClient } from "@tanstack/react-query";
 
 const PaymentPage = () => {
+  const queryClient = useQueryClient();
   const user = useSelector((state) => state.user);
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -20,56 +22,49 @@ const PaymentPage = () => {
   const [voucherInfo, setVoucherInfo] = useState(null);
 
   const dispatch = useDispatch();
-
   const { state } = useLocation();
-  const order = state.orderItemSlected;
-  const updatedOrder = order.map(({ id, ...rest }) => ({
-    ...rest,
-    product: id,
-  }));
-  const mutationAddOrder = useMutationHooks((data) => {
-    const { token, ...rests } = data;
-    const res = OrderService.createOrder({ ...rests }, token);
-    return res;
-  });
-
+  const order = state?.orderItemSlected;
   const navigate = useNavigate();
   const { success, error } = useMessage();
 
+  // Chuyển đổi đơn hàng sang định dạng phù hợp
+  const updatedOrder = useMemo(() => {
+    return order?.map(({ id, ...rest }) => ({
+      ...rest,
+      product: id,
+    }));
+  }, [order]);
+
+  // Tính toán giá trị đơn hàng
   const priceMemo = useMemo(() => {
     if (!order || order.length === 0) return 0;
-
     return order.reduce((total, item) => {
       return total + item.price * item.amount * (1 - item.discount / 100);
     }, 0);
   }, [order]);
 
   const diliveryPriceMeno = useMemo(() => {
-    if (priceMemo > 500000) {
-      return 0;
-    } else if (priceMemo === 0) {
-      return 0;
-    } else {
-      return 30000;
-    }
+    if (priceMemo > 500000) return 0;
+    if (priceMemo === 0) return 0;
+    return 30000;
   }, [priceMemo]);
+
   const totalMeno = useMemo(() => {
     return priceMemo + diliveryPriceMeno;
   }, [priceMemo, diliveryPriceMeno]);
 
-  const handleAddOrder = () => {
-    if (
-      user?.access_token &&
-      order &&
-      user?.name &&
-      user?.address &&
-      user?.phone &&
-      user?.city &&
-      priceMemo &&
-      user?.id
-    ) {
-      
-      mutationAddOrder.mutate({
+  // Mutation để tạo đơn hàng
+  const mutationAddOrder = useMutationHooks((data) => {
+    const { token, ...rests } = data;
+    return OrderService.createOrder({ ...rests }, token);
+  });
+
+  // Xử lý tạo đơn hàng
+  const handleAddOrder = async () => {
+    if (!validateOrder()) return;
+    try {
+      setLoading(true);
+      const orderData = {
         token: user?.access_token,
         orderItems: updatedOrder,
         fullName: user?.name,
@@ -83,44 +78,57 @@ const PaymentPage = () => {
         user: user?.id,
         VoucherCode: voucherCode,
         VoucherDiscount: discountVoucher,
-      },{onSuccess: async()=>{
-        setLoading(true);
-        const productId = order.map(item => item.id);
-        await CartService.deleteManyCart(user?.id,productId)
-        await CartService.getCartbyUserId(user?.id)
-      }
+      };
+
+      // Nếu là thanh toán VNPay, chuyển hướng đến trang thanh toán
+      // if (paymentMethod === "VNPAY") {
+      //   const response = await OrderService.createVNPayPaymentUrl({
+      //     ...orderData,
+      //     returnUrl: window.location.origin + "/payment-success"
+      //   });
         
-      });
-    }
-  };
-  const { isSuccess, data } = mutationAddOrder;
-  useEffect(() => {
-    console.log(data, isSuccess);
-    
-    if (data?.data?.status === "OK" && isSuccess) {
-      
+      //   if (response.url) {
+      //     window.location.href = response.url;
+      //   } else {
+      //     throw new Error("Không thể tạo URL thanh toán VNPay");
+      //   }
+      //   return;
+      // }
+
+      // Nếu là COD, tạo đơn hàng bình thường
+      await mutationAddOrder.mutateAsync(orderData);
+
+      // Xóa sản phẩm khỏi giỏ hàng
+      const productIds = order.map((item) => item.id);
+      await CartService.deleteManyCart(user?.id, productIds);
+      queryClient.invalidateQueries({ queryKey: ["Cart"] })
+      await CartService.getCartbyUserId(user?.id);
+
       success("Đặt hàng thành công");
       navigate("/my-order");
-      window.window.location.reload();
-      setLoading(false); 
-    } else if (isSuccess) {
-      setLoading(false); 
-      error(data?.data?.message);
+    } catch (err) {
+      error(err.message || "Có lỗi xảy ra khi đặt hàng");
+    } finally {
+      setLoading(false);
     }
-  }, [
-    data,
-    dispatch,
-    error,
-    isSuccess,
-    navigate,
-    order?.orderItemSlected,
-    paymentMethod,
-    success,
-    totalMeno,
-  ]);
+  };
 
+  const validateOrder = () => {
+    if (!user?.access_token || !order || !priceMemo || !user?.id) {
+      error("Thiếu thông tin đơn hàng");
+      return false;
+    }
+
+    if (!user?.name || !user?.address || !user?.phone || !user?.city) {
+      error("Vui lòng cập nhật đầy đủ thông tin giao hàng");
+      return false;
+    }
+
+    return true;
+  };
+  
   const handleApplyVoucher = async () => {
-    if (!voucherCode) {
+    if (!voucherCode.trim()) {
       error("Vui lòng nhập mã giảm giá");
       return;
     }
@@ -128,35 +136,38 @@ const PaymentPage = () => {
     try {
       const res = await VoucherService.checkVoucher(voucherCode);
       const voucher = res.data;
+
       if (
-        voucher &&
-        priceMemo >= voucher.min_order_value &&
-        new Date() >= new Date(voucher.start_date) &&
-        new Date() <= new Date(voucher.end_date)
+        !voucher ||
+        priceMemo < voucher.min_order_value ||
+        new Date() < new Date(voucher.start_date) ||
+        new Date() > new Date(voucher.end_date)
       ) {
-        const discount = Math.min(
-          (voucher.discount_percent / 100) * priceMemo,
-          voucher.max_discount
-        );
-        setDiscountVoucher(discount);
-        setVoucherInfo(voucher);
-        success("Áp dụng mã giảm giá thành công!");
-      } else {
-        setDiscountVoucher(0);
-        setVoucherInfo(null);
-        error("Mã không hợp lệ hoặc không áp dụng cho đơn hàng này");
+        throw new Error("Mã không hợp lệ hoặc không áp dụng cho đơn hàng này");
       }
+
+      const discount = Math.min(
+        (voucher.discount_percent / 100) * priceMemo,
+        voucher.max_discount
+      );
+
+      setDiscountVoucher(discount);
+      setVoucherInfo(voucher);
+      success("Áp dụng mã giảm giá thành công!");
     } catch (err) {
       setDiscountVoucher(0);
       setVoucherInfo(null);
-      error("Không tìm thấy mã giảm giá");
+      error(err.message || "Không tìm thấy mã giảm giá");
     }
   };
+
   useEffect(() => {
     if (voucherCode.trim() === "") {
       setVoucherInfo(null);
+      setDiscountVoucher(0);
     }
   }, [voucherCode]);
+
   return (
     <div style={{ background: "#f5f5ff", width: "100%", height: "100vh" }}>
       <div style={{ height: "100%", width: "1270px", margin: "0 auto" }}>
@@ -166,7 +177,7 @@ const PaymentPage = () => {
             <div
               style={{
                 padding: "24px",
-                backgroundColor: "#ffffff", // Container nền trắng
+                backgroundColor: "#ffffff",
                 borderRadius: "12px",
                 boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
                 maxWidth: "600px",
@@ -196,9 +207,7 @@ const PaymentPage = () => {
                         justifyContent: "space-between",
                         padding: "8px 0",
                         borderBottom:
-                          index < order.length - 1
-                            ? "1px solid #e8e8e8"
-                            : "none",
+                          index < order.length - 1 ? "1px solid #e8e8e8" : "none",
                       }}
                     >
                       <div
@@ -270,11 +279,11 @@ const PaymentPage = () => {
                       name="payment"
                       value="VNPAY"
                       checked={paymentMethod === "VNPAY"}
-                      onChange={() => {
-                        setPaymentMethod("VNPAY");
-                      }}
+                      onChange={() => setPaymentMethod("VNPAY")}
                     />
-                    <span style={{ marginLeft: 6 }}>Thanh toán bằng VnPay</span>
+                    <span style={{ marginLeft: 6 }}>
+                      Thanh toán bằng VNPay
+                    </span>
                   </div>
                 </div>
 
@@ -409,9 +418,9 @@ const PaymentPage = () => {
                       >
                         <span>
                           <span>Thời gian áp dụng:</span>{" "}
-                          {new Date(voucherInfo.start_date).toLocaleDateString(
-                            "vi-VN"
-                          )}{" "}
+                          {new Date(
+                            voucherInfo.start_date
+                          ).toLocaleDateString("vi-VN")}{" "}
                           đến{" "}
                           {new Date(voucherInfo.end_date).toLocaleDateString(
                             "vi-VN"
@@ -543,7 +552,9 @@ const PaymentPage = () => {
                     {new Intl.NumberFormat("vi-VN", {
                       style: "currency",
                       currency: "VND",
-                    }).format(priceMemo + diliveryPriceMeno - discountVoucher)}
+                    }).format(
+                      priceMemo + diliveryPriceMeno - discountVoucher
+                    )}
                   </span>
                 </div>
               </WrapperInfo>
@@ -553,33 +564,24 @@ const PaymentPage = () => {
                   <span style={{ fontWeight: "bold" }}>{user?.address}</span>
                 </div>
               </WrapperInfo>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "10px",
+              <ButtonComponent
+                onClick={handleAddOrder}
+                disabled={loading}
+                styleButton={{
+                  background: "rgb(255,57,69)",
+                  height: "48px",
+                  width: "100%",
+                  border: "none",
+                  borderRadius: "4px",
+                  opacity: loading ? 0.7 : 1,
                 }}
-              >
-                <ButtonComponent
-                  onClick={handleAddOrder}
-                  size={40}
-                  border={false}
-                  styleButton={{
-                    background: "rgb(255,57,69)",
-                    height: "48px",
-                    width: "600px",
-                    border: "none",
-                    borderRadius: "4px",
-                  }}
-                  textButton={"Thanh toán"}
-                  styletextButton={{
-                    color: "#fff",
-                    fontSize: "15px",
-                    fontWeight: "700",
-                  }}
-                />
-              </div>
+                textButton={loading ? "Đang xử lý..." : "Đặt hàng"}
+                styletextButton={{
+                  color: "#fff",
+                  fontSize: "15px",
+                  fontWeight: "700",
+                }}
+              />
             </div>
           </WrapperRight>
         </div>

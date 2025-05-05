@@ -5,6 +5,6 @@ export const orderContant = {
     },
     payment:{
         COD: 'Thanh toán tiền mặt khi nhận hàng',
-        VnPay: 'Thanh toán bằng VnPay'
+        VNPAY: 'Thanh toán bằng VNPAY'
     }
 }

@@ -23,19 +23,38 @@ function App() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
 
+  UserService.axiosJWT.interceptors.request.use(async (config) => {
+    const currentTime = new Date();
+    const { decoded } = handleDecoded();
+    let storageRefreshToken = localStorage.getItem("refresh_token");
+    const refreshToken = JSON.parse(storageRefreshToken);
+    const decodedRefreshToken = jwtDecode(refreshToken);
+    if (decoded?.exp < currentTime.getTime() / 1000) {
+      if (decodedRefreshToken?.exp > currentTime.getTime() / 1000) {
+        const data = await UserService.refreshToken(refreshToken);
+        config.headers["token"] = `Bearer ${data?.access_token}`;
+      } else {
+      }
+    }
+  });
+
   const handleGetDetailsUser = useCallback(
     async (id, token) => {
+      let storageRefreshToken = localStorage.getItem("refresh_token");
+      const refreshToken = JSON.parse(storageRefreshToken);
       const res = await UserService.getDetailUser(id, token);
-      dispatch(updateUser({ ...res?.data, access_token: token }));
+      dispatch(updateUser({ ...res?.data, access_token: token, refreshToken }));
     },
     [dispatch]
   );
+  
   useEffect(() => {
     const { storageData, decoded } = handleDecoded();
     if (decoded?.id) {
       handleGetDetailsUser(decoded?.id, storageData);
     }
   }, [handleGetDetailsUser]);
+
   const handleDecoded = () => {
     let storageData = localStorage.getItem("access_token");
     let decoded = {};
@@ -64,7 +83,7 @@ function App() {
   return (
     <MessageProvider>
       <GlobalStyle />
-        <Router>
+      <Router>
         <Routes>
           {routes.map((route) => {
             const Page = route.page;
