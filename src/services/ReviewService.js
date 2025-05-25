@@ -43,3 +43,9 @@ export const getDetailsReview = async (order,product) => {
     );
     return res.data;
 };
+export const getAllReview = async () => {
+    const res = await axios.get(
+      `${process.env.REACT_APP_API_URL}/review/get-all-review`
+    );
+    return res.data;
+};

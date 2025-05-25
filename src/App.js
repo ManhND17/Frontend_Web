@@ -8,9 +8,10 @@ import { isJsonString } from "./utils";
 import { jwtDecode } from "jwt-decode";
 import * as UserService from "./services/UserService";
 import { useDispatch } from "react-redux";
-import { updateUser } from "./redux/slides/UserSlide";
+import { resetUser, updateUser } from "./redux/slides/UserSlide";
 import { MessageProvider } from "./components/Message/MessageProvider";
 import { useSelector } from "react-redux";
+import ChatInterface from "./components/ChatInterface/ChatInterface";
 
 const GlobalStyle = createGlobalStyle`
   html, body {
@@ -34,6 +35,7 @@ function App() {
         const data = await UserService.refreshToken(refreshToken);
         config.headers["token"] = `Bearer ${data?.access_token}`;
       } else {
+        dispatch(resetUser());
       }
     }
   });
@@ -47,7 +49,7 @@ function App() {
     },
     [dispatch]
   );
-  
+
   useEffect(() => {
     const { storageData, decoded } = handleDecoded();
     if (decoded?.id) {
@@ -107,6 +109,7 @@ function App() {
             );
           })}
         </Routes>
+        {!user?.isAdmin && <ChatInterface />}
       </Router>
     </MessageProvider>
   );

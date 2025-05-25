@@ -16,10 +16,11 @@ import { jwtDecode } from "jwt-decode";
 import { useDispatch } from "react-redux";
 import { updateUser } from "../../redux/slides/UserSlide";
 import { useMessage } from "../../components/Message/MessageProvider";
+import { GoogleLogin } from "@react-oauth/google";
 
 const SignInPage = () => {
   const [isShowPassword, setIsShowPassword] = useState(false);
-  const location = useLocation()
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -32,10 +33,10 @@ const SignInPage = () => {
 
   const handleGetDetailsUser = useCallback(
     async (id, token) => {
-      const storage = localStorage.getItem('refresh_token')
-      const refreshToken = JSON.parse(storage)
+      const storage = localStorage.getItem("refresh_token");
+      const refreshToken = JSON.parse(storage);
       const res = await UserService.getDetailUser(id, token);
-      dispatch(updateUser({ ...res?.data, access_token: token, refreshToken}));
+      dispatch(updateUser({ ...res?.data, access_token: token, refreshToken }));
     },
     [dispatch]
   );
@@ -43,21 +44,22 @@ const SignInPage = () => {
   useEffect(() => {
     if (isSuccess && data && data?.status !== "ERR") {
       success("Đăng nhập thành công!");
-      console.log('first',data)
       localStorage.setItem("access_token", JSON.stringify(data?.access_token));
-      localStorage.setItem("refresh_token", JSON.stringify(data?.refresh_token));
+      localStorage.setItem(
+        "refresh_token",
+        JSON.stringify(data?.refresh_token)
+      );
       if (data?.access_token) {
         const decoded = jwtDecode(data?.access_token);
         if (decoded?.id) {
           handleGetDetailsUser(decoded?.id, data?.access_token);
         }
       }
-      if(location?.state){
-        navigate(location.state)
-      }else{
+      if (location?.state) {
+        navigate(location.state);
+      } else {
         navigate("/");
       }
-      
     } else if (isError || data?.status === "ERR") {
       error(data?.message || "Xảy ra lỗi, vui lòng thử lại!");
     }
@@ -69,7 +71,7 @@ const SignInPage = () => {
     handleGetDetailsUser,
     success,
     error,
-    location
+    location,
   ]);
 
   const handleOnChangeEmail = (value) => {
@@ -190,6 +192,49 @@ const SignInPage = () => {
               fontWeight: "700",
             }}
           />
+          <div style={{ margin: "10px 0", textAlign: "center" }}>
+            <GoogleLogin
+              onSuccess={async (credentialResponse) => {
+                const { credential } = credentialResponse;
+                if (credential) {
+                  const decoded = jwtDecode(credential); // lấy thông tin user từ token Google
+                  const { email, name, sub } = decoded;
+
+                  // Gửi token hoặc email tới backend để xử lý đăng nhập/đăng ký
+                  const res = await UserService.loginWithGoogle({
+                    email,
+                    name,
+                    googleId: sub,
+                  });
+                  if (res?.status === "OK") {
+                    success("Đăng nhập bằng Google thành công!");
+                    localStorage.setItem(
+                      "access_token",
+                      JSON.stringify(res?.access_token)
+                    );
+                    localStorage.setItem(
+                      "refresh_token",
+                      JSON.stringify(res?.refresh_token)
+                    );
+
+                    const decodedToken = jwtDecode(res?.access_token);
+                    if (decodedToken?.id) {
+                      await handleGetDetailsUser(
+                        decodedToken?.id,
+                        res?.access_token
+                      );
+                    }
+                    navigate("/");
+                  } else {
+                    error("Đăng nhập Google thất bại!");
+                  }
+                }
+              }}
+              onError={() => {
+                error("Đăng nhập Google thất bại!");
+              }}
+            />
+          </div>
 
           <WrapperTextLight>Quên mật khẩu?</WrapperTextLight>
           <p>

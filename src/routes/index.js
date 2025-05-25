@@ -6,23 +6,17 @@ import ProductDetailsPage from "../pages/ProductDetailsPage/ProductDetailsPage"
 import SignInPage from "../pages/SignInPage/SignInPage"
 import SignUpPage from "../pages/SignUpPage/SignUpPage"
 import AdminPage from "../pages/AdminPage/AdminPage"
-import OrderPageUser from "../pages/OrderPage/OrderPageUser"
 import ProfilePage from "../pages/Profile/ProfilePage"
 import PaymentPage from "../pages/PaymentPage/PaymentPage"
 import MyOrderPage from "../pages/MyOrderPage/MyOrderPage"
 import OrderDetail from '../pages/OrderDetails/OrderDetails'
 import Review from '../pages/ReveiwPage/Reveiw'
+import PaymentSuccess from "../pages/PaymentSuccess/PaymentSuccess"
 
 export const routes = [
     {
         path: '/',
         page: HomePage,
-        isShowHeader: true,
-        isShowFotter: true
-    },
-    {
-        path: '/order',
-        page: OrderPageUser,
         isShowHeader: true,
         isShowFotter: true
     },
@@ -90,6 +84,12 @@ export const routes = [
     {
         path: '/payment',
         page: PaymentPage,
+        isShowHeader: true,
+        isShowFotter: false
+    },
+    {
+        path: '/payment-result',
+        page: PaymentSuccess,
         isShowHeader: true,
         isShowFotter: false
     },

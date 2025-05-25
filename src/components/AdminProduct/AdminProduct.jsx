@@ -199,8 +199,8 @@ const AdminProduct = () => {
       render: (price) => Math.round(price*10)/10,
       sorter: (a, b) => a.rating - b.rating,
     },
-    { title: "Số lượng trong kho", dataIndex: "countInStock", key: "count" },
-    { title: "Số lượng đã bán", dataIndex: "selled", key: "selled" },
+    { title: "Số lượng trong kho", dataIndex: "countInStock", key: "count", sorter: (a,b) => a.countInStock - b.countInStock  },
+    { title: "Số lượng đã bán", dataIndex: "selled", key: "selled", sorter: (a,b) => a.selled - b.selled },
     {
       title: "Giảm giá",
       dataIndex: "discount",
@@ -557,7 +557,6 @@ const AdminProduct = () => {
 
   return (
     <div>
-      <WrapperHeader>Quản lý sản phẩm</WrapperHeader>
       <div style={{ marginTop: "30px" }}>
         <Button
           style={{ height: "150px", width: "150px", borderRadius: "6px" }}

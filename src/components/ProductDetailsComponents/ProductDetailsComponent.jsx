@@ -8,6 +8,7 @@ import {
   WrapperAdress,
   WrapperInputNumber,
   WrapperQualityProduct,
+  ProductDescription,
 } from "./style";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { StarFilled, StarOutlined } from "@ant-design/icons";
@@ -43,7 +44,10 @@ const ProductDetailsComponent = ({ idProduct }) => {
   };
 
   const handleChange = (value) => {
-    setQuantity(value);
+    const parsedValue = parseInt(value);
+    if (!isNaN(parsedValue) && parsedValue >= 1) {
+      setQuantity(parsedValue);
+    }
   };
 
   const renderStars = (rating = 0) => {
@@ -159,7 +163,7 @@ const ProductDetailsComponent = ({ idProduct }) => {
   };
 
   return (
-    <Loading isLoading={isLoading}>
+    <Loading isLoading={isLoading} style={{ paddingBottom: "10px" }}>
       <Row
         style={{
           padding: "24px",
@@ -167,10 +171,10 @@ const ProductDetailsComponent = ({ idProduct }) => {
           borderRadius: "8px",
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
           margin: "0 auto",
-          maxWidth: "1200px",
+          paddingBottom: "10px",
+          maxWidth: "1300px",
         }}
       >
-        {/* Phần hình ảnh */}
         <Col
           span={10}
           style={{
@@ -397,6 +401,11 @@ const ProductDetailsComponent = ({ idProduct }) => {
           </div>
         </Col>
       </Row>
+      {/* Mô tả sản phẩm */}
+      <ProductDescription>
+        Mô tả sản phẩm:{" "}
+        {productDetails?.description || "Chưa có mô tả cho sản phẩm này."}
+      </ProductDescription>
       <Divider orientation="left" style={{ marginTop: "32px" }}>
         Đánh giá sản phẩm
       </Divider>
@@ -408,7 +417,7 @@ const ProductDetailsComponent = ({ idProduct }) => {
           <div
             key={index}
             style={{
-              marginBottom: "24px",
+              marginBottom: index === reviews.length - 1 ? 0 : "10px",
               padding: "16px",
               background: "#fafafa",
               borderRadius: "8px",

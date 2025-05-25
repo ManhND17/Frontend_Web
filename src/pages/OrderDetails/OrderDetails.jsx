@@ -8,7 +8,6 @@ const OrderSuccess = () => {
   const location = useLocation();
   const { state } = location;
   const { order } = state;
-  console.log('ỏder',order)
   return (
     <div
       style={{ background: "#f5f5ff", minHeight: "100vh", padding: "40px 0" }}
@@ -79,6 +78,34 @@ const OrderSuccess = () => {
                 <WrapperInfo
                   style={{ fontWeight: "bold", marginBottom: "8px" }}
                 >
+                  Trạng thái thanh toán
+                </WrapperInfo>
+                <div
+                  style={{
+                    backgroundColor: "#f0f6ff",
+                    border: "1px solid #cce0ff",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    fontSize: "15px",
+                  }}
+                >
+                  <div
+                    style={{
+                      marginBottom: "4px",
+                      color: "#ea8500",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {order?.paymentStatus === "paid"
+                      ? "Đã thanh toán"
+                      : "Chưa thanh toán"}{" "}
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginBottom: "24px" }}>
+                <WrapperInfo
+                  style={{ fontWeight: "bold", marginBottom: "8px" }}
+                >
                   Thông tin giao hàng
                 </WrapperInfo>
                 <div
@@ -124,7 +151,7 @@ const OrderSuccess = () => {
                         Mã:{" "}
                       </span>
                       <span style={{ fontStyle: "italic", color: "#1677ff" }}>
-                        {order.VoucherCode|| "Không có"}
+                        {order.VoucherCode || "Không có"}
                       </span>
                     </div>
                   </div>
@@ -153,44 +180,49 @@ const OrderSuccess = () => {
                     key={item.product}
                     style={{ marginBottom: "16px" }}
                   >
-                   <div
-                  style={{ display: "flex", gap: "16px", alignItems: "center" }}
-                >
-                  <img
-                    src={item.image}
-                    alt="product"
-                    style={{
-                      width: "90px",
-                      height: "90px",
-                      objectFit: "cover",
-                      borderRadius: "10px",
-                      border: "1px solid #ddd",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
                     <div
                       style={{
-                        fontWeight: 600,
-                        fontSize: "16px",
-                        marginBottom: "6px",
+                        display: "flex",
+                        gap: "16px",
+                        alignItems: "center",
                       }}
                     >
-                      {item.name}
+                      <img
+                        src={item.image}
+                        alt="product"
+                        style={{
+                          width: "90px",
+                          height: "90px",
+                          objectFit: "cover",
+                          borderRadius: "10px",
+                          border: "1px solid #ddd",
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "16px",
+                            marginBottom: "6px",
+                          }}
+                        >
+                          {item.name}
+                        </div>
+                        <div>Số lượng: {item.amount}</div>
+                        <div style={{ marginTop: "4px", fontWeight: 500 }}>
+                          Giá:{" "}
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(
+                            (item?.price *
+                              item?.amount *
+                              (100 - item?.discount)) /
+                              100
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div>Số lượng: {item.amount}</div>
-                    <div style={{ marginTop: "4px", fontWeight: 500 }}>
-                      Giá:{" "}
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(
-                        (item?.price * item?.amount * (100 - item?.discount)) /
-                          100
-                      )}
-                    </div>
-                    
-                  </div>
-                </div>
                   </WrapperItemOrder>
                 ))}
               </div>

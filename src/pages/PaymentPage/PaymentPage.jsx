@@ -74,36 +74,31 @@ const PaymentPage = () => {
         paymentMethod: paymentMethod,
         itemsPrice: priceMemo,
         shippingPrice: diliveryPriceMeno,
-        totalPrice: totalMeno - discountVoucher,
+        totalPrice: Number(totalMeno - discountVoucher),
         user: user?.id,
         VoucherCode: voucherCode,
         VoucherDiscount: discountVoucher,
       };
 
-      // Nếu là thanh toán VNPay, chuyển hướng đến trang thanh toán
-      // if (paymentMethod === "VNPAY") {
-      //   const response = await OrderService.createVNPayPaymentUrl({
-      //     ...orderData,
-      //     returnUrl: window.location.origin + "/payment-success"
-      //   });
-        
-      //   if (response.url) {
-      //     window.location.href = response.url;
-      //   } else {
-      //     throw new Error("Không thể tạo URL thanh toán VNPay");
-      //   }
-      //   return;
-      // }
-
-      // Nếu là COD, tạo đơn hàng bình thường
-      await mutationAddOrder.mutateAsync(orderData);
-
-      // Xóa sản phẩm khỏi giỏ hàng
+      const data = await mutationAddOrder.mutateAsync(orderData);
       const productIds = order.map((item) => item.id);
       await CartService.deleteManyCart(user?.id, productIds);
       queryClient.invalidateQueries({ queryKey: ["Cart"] })
       await CartService.getCartbyUserId(user?.id);
+      // Nếu là thanh toán VNPay, chuyển hướng đến trang thanh toán
+      if (paymentMethod === "VNPAY") {
+        const response = await OrderService.crecreateVNPayPaymentUrl(
+          data.data.data,
+        );
+        if (response.data.paymentUrl) {
+          window.location.href = response.data.paymentUrl;
+        } else {
+          throw new Error("Không thể tạo URL thanh toán VNPay");
+        }
+        return;
+      }
 
+      // Xóa sản phẩm khỏi giỏ hàng
       success("Đặt hàng thành công");
       navigate("/my-order");
     } catch (err) {

@@ -13,7 +13,7 @@ import {
   ShoppingCartOutlined,
 } from "@ant-design/icons";
 import ButtonInputSearch from "../ButtonInputSearch/ButtonInputSearch";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { logout } from "../../redux/slides/UserSlide";
 import { useDispatch } from "react-redux";
@@ -24,33 +24,42 @@ import * as CartService from "../../services/CartService";
 import { useQuery } from "@tanstack/react-query";
 import { updateUser } from "../../redux/slides/UserSlide";
 
-
 const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+  const user = useSelector((state) => state.user);
   const [loading, setLoading] = useState(false);
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
-  
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("access_token");
+
+    // Nếu có token mà không có user => xóa token để tránh gọi API lỗi
+    if (!storedUser && token) {
+      localStorage.removeItem("access_token");
+    }
+
+    if (storedUser && !user?.id) {
+      dispatch(updateUser(storedUser));
+    }
+  }, []);
+
   const getAllCart = async () => {
-      const res = await CartService.getCartbyUserId(user?.id);
-      return res;
-    };
+    const res = await CartService.getCartbyUserId(user?.id);
+    return res;
+  };
 
   const { data: orderData, refetch } = useQuery({
-    queryKey: ["Cart"],
+    queryKey: ["Cart", user?.id],
     queryFn: getAllCart,
+    enabled: !!user?.id,
     retry: 3,
     retryDelay: 1000,
   });
 
-  
-  
   const orderItems = useMemo(() => orderData?.data?.data || [], [orderData]);
-
-  const user = useSelector((state) => state.user);
-  
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -58,7 +67,7 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
       dispatch(updateUser(storedUser));
     }
   }, []);
-  console.log('first',user)
+
   const { success } = useMessage();
   const handleNavigateLogin = () => {
     navigate("/sign-in");
@@ -66,13 +75,13 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
   const handleNavigateSignUp = () => {
     navigate("/sign-up");
   };
-  const handleCart = () =>{
+  const handleCart = () => {
     setLoading(true);
-    navigate('/cart')
+    navigate("/cart");
     setTimeout(async () => {
       setLoading(false);
     }, 1000);
-  }
+  };
   const handleNavigateProfile = () => {
     setLoading(true);
     navigate("/profile-user");
@@ -88,7 +97,7 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
     }, 1000);
   };
 
-  const handleNavigateOrder= () => {
+  const handleNavigateOrder = () => {
     setLoading(true);
     navigate("/my-order");
     setTimeout(async () => {
@@ -103,7 +112,7 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
     localStorage.removeItem("access_token");
     await dispatch(logout());
     setIsLoggedOut(true);
-    success("Đăng xuất thành công"); 
+    success("Đăng xuất thành công");
     setTimeout(() => {
       window.location.href = "/";
     }, 1000);
@@ -112,9 +121,9 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
   useEffect(() => {
     setLoading(true);
     setUserName(user?.name);
-    setUserAvatar(user?.avatar)
+    setUserAvatar(user?.avatar);
     setLoading(false);
-  }, [user?.name,user?.avatar]);
+  }, [user?.name, user?.avatar]);
 
   useEffect(() => {
     if (isLoggedOut) {
@@ -132,13 +141,12 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
 
   const content = (
     <div>
-      
       <WrapperContentPopup onClick={handleNavigateProfile}>
         Thông tin người dùng
       </WrapperContentPopup>
       <WrapperContentPopup onClick={handleNavigateOrder}>
-          Đơn hàng của tôi
-        </WrapperContentPopup>
+        Đơn hàng của tôi
+      </WrapperContentPopup>
       {user.isAdmin && (
         <WrapperContentPopup onClick={handleNavigateAdmin}>
           Quản lý hệ thống
@@ -153,7 +161,7 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
   const onSearch = async (e) => {
     dispatch(searchProduct(e.target.value));
   };
-  
+
   return (
     <div>
       <Spin spinning={loading}>
@@ -165,13 +173,15 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
           }}
         >
           <Col span={6}>
-            <WrapperTextHeader onClick={() => {
-              setLoading(true);
-              navigate("/");
-              setTimeout(async () => {
-                setLoading(false);
-              }, 700);
-              }}>
+            <WrapperTextHeader
+              onClick={() => {
+                setLoading(true);
+                navigate("/");
+                setTimeout(async () => {
+                  setLoading(false);
+                }, 700);
+              }}
+            >
               Shop
             </WrapperTextHeader>
           </Col>
@@ -189,14 +199,20 @@ const HeaderComponent = ({ isHiddenSearch = false, isHiddenCart = false }) => {
           <Col span={6} style={{ display: "flex", gap: "30px" }}>
             <WrapperHeaderAccount>
               {userAvatar ? (
-                <img style={{
-                  height: "35px",
-                  width: "35px",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                }} src={userAvatar} alt ="avatar"/>
-              ):(
-                <UserOutlined style={{ fontSize: "30px", marginLeft: "15px" }} />
+                <img
+                  style={{
+                    height: "35px",
+                    width: "35px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                  src={userAvatar}
+                  alt="avatar"
+                />
+              ) : (
+                <UserOutlined
+                  style={{ fontSize: "30px", marginLeft: "15px" }}
+                />
               )}
               {user?.access_token ? (
                 <>

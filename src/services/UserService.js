@@ -37,6 +37,7 @@ export const getNameAvatar = async (id) => {
   return res.data;
 };
 
+
 export const getAllUser = async (access_token) => {
   const res = await axios.get(
     `${process.env.REACT_APP_API_URL}/user/getAll`,
@@ -82,3 +83,11 @@ export const deleteUser = async (id,data,access_token) => {
   return res.data;
 };
 
+export const loginWithGoogle = async (data) => {
+  try {
+    const res = await axios.post(`${process.env.REACT_APP_API_URL}/user/google`, data); // endpoint backend xử lý Google login
+    return res.data;
+  } catch (error) {
+    return { status: "ERR", message: error.response?.data?.message || "Lỗi server" };
+  }
+};

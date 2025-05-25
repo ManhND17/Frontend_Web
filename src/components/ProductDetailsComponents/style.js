@@ -73,3 +73,15 @@ export const WrapperInputNumber = styled(InputNumber)`
     }
   };
 `;
+export const ProductDescription = styled.div`
+  margin-top: 16px;
+  font-size: 16px;
+  color: #444;
+  line-height: 1.6;
+  white-space: pre-wrap; 
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #fafafa;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+`;

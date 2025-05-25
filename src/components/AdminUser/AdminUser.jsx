@@ -58,24 +58,24 @@ const AdminUser = () => {
   });
   const handleDownloadExcel = () => {
     if (!products?.data) return;
-  
+
     const dataExport = products.data.map((item) => ({
       "Tên khách hàng": item.name,
-      "Email": item.email,
+      Email: item.email,
       "Số điện thoại": item.phone,
       "Địa chỉ": item.address,
-      "Admin": item.isAdmin,
+      Admin: item.isAdmin,
     }));
-  
+
     const ws = XLSX.utils.json_to_sheet(dataExport);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Danh sách người dùng");
-  
+
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(data, "Danh_sach_nguoi_dung.xlsx");
   };
-  
+
   const renderAction = () => {
     return (
       <div>
@@ -90,7 +90,6 @@ const AdminUser = () => {
       </div>
     );
   };
-
 
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
     confirm();
@@ -209,7 +208,7 @@ const AdminUser = () => {
       title: "Admin",
       dataIndex: "isAdmin",
       key: "isAdmin",
-      render: (isAdmin) => (isAdmin ? "True" : "False"),
+      render: (isAdmin) => (isAdmin ? "Có" : "Không"),
     },
     { title: "Ghi chú", dataIndex: "action", render: renderAction },
   ];
@@ -257,7 +256,7 @@ const AdminUser = () => {
         address: res?.data?.address,
         phone: res?.data?.phone,
         avatar: res?.data?.avatar,
-        idAdmin: res?.data?.isAdmin,
+        isAdmin: res?.data?.isAdmin,
       });
     }
     return res;
@@ -338,13 +337,33 @@ const AdminUser = () => {
       price: "",
       description: "",
       rating: "",
+      isAdmin: "",
       type: "",
       image: "",
       countInStock: "",
     });
     form.resetFields();
   }, [form]);
-
+  const handleCloseDrawer = () => {
+    setIsOpenDrawer(false);
+    setStateUserDetails({
+      name: "",
+      avatar: "",
+      email: "",
+      address: "",
+      phone: "",
+      isAdmin: false,
+    });
+    setRowSelected(""); // Reset rowSelected khi đóng Drawer
+  };
+  useEffect(() => {
+    const fetchData = async () => {
+      if (rowSelected) {
+        await fetchGetDetailsProduct();
+      }
+    };
+    fetchData();
+  }, [rowSelected, fetchGetDetailsProduct]);
   useEffect(() => {
     if (isSuccessUpdate && dataUpdate?.status === "OK") {
       success("Cập nhật thành công");
@@ -414,7 +433,6 @@ const AdminUser = () => {
   };
   return (
     <div>
-      <WrapperHeader>Quản lý người dùng</WrapperHeader>
       <div style={{ marginTop: "10px" }}>
         <Button
           type="primary"
@@ -449,7 +467,7 @@ const AdminUser = () => {
       <DrawerComponent
         title="Chi tiết khách hàng"
         isOpen={isOpenDrawer}
-        onClose={() => setIsOpenDrawer(false)}
+        onClose={handleCloseDrawer}
         width="80%"
         footer={null}
       >
@@ -474,7 +492,7 @@ const AdminUser = () => {
           </Form.Item>
 
           <Form.Item
-            label="email"
+            label="Email"
             name="email"
             rules={[
               {
@@ -487,6 +505,17 @@ const AdminUser = () => {
               value={stateUserDetails.email}
               onChange={handleOnchangeDetails}
               name="email"
+            />
+          </Form.Item>
+          <Form.Item
+            label="isAdmin"
+            name="isAdmin"
+            rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
+          >
+            <InputComponent
+              value={stateUserDetails.isAdmin}
+              onChange={handleOnchangeDetails}
+              name="isAdmin"
             />
           </Form.Item>
           <Form.Item

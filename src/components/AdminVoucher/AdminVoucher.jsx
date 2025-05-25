@@ -362,7 +362,6 @@ const AdminVoucher = () => {
 
   return (
     <div>
-      <WrapperHeader>Quản lý voucher</WrapperHeader>
       <div style={{ marginTop: "30px" }}>
         <Button
           style={{ height: "150px", width: "150px", borderRadius: "6px" }}

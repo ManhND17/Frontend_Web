@@ -41,7 +41,6 @@ const OrderSuccess = () => {
               order._id,
               order.orderItems[i].product
             );
-            console.log("check", res.status,res.data);
             if (res.status === "OK" && res.data) {
               updatedReviews[i] = {
                 ...updatedReviews[i],
@@ -129,7 +128,6 @@ const OrderSuccess = () => {
 
   const handleUpdateReview = (index) => {
     if (reviews[index].comment && reviews[index].id) {
-      console.log("check1", reviews[index]);
       mutationUpdateReview.mutate({
         id: reviews[index].id,
         data: reviews[index],
